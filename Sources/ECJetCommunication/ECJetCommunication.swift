@@ -72,10 +72,10 @@ public enum ReceptionStatus: UInt8 {
 }
 
 public struct CommandInformation {
-    let acknowledge: ReceptionStatus
-    let nr: UInt16
-    let devStatus: UInt16
-    let status: UInt16
+    public let acknowledge: ReceptionStatus
+    public let nr: UInt16
+    public let devStatus: UInt16
+    public let status: UInt16
     
     public init(acknowledge: ReceptionStatus, nr: UInt16 = 0, devStatus: UInt16 = 0, status: UInt16 = 0) {
         self.acknowledge = acknowledge
@@ -129,12 +129,12 @@ public struct CommandInformation {
 public struct Frame: CustomStringConvertible {
     //let bytes: [UInt8]
     
-    let address: UInt8
-    let command: Command
-    let dataOffset: UInt16
-    let information: CommandInformation
-    let data: [UInt8]
-    let verification: VerificationMode
+    public let address: UInt8
+    public let command: Command
+    public let dataOffset: UInt16
+    public let information: CommandInformation
+    public let data: [UInt8]
+    public let verification: VerificationMode
     
     public enum VerificationMode {
         case none
