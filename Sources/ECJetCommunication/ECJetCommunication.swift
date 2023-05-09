@@ -71,20 +71,20 @@ public struct CommandInformation {
     let devStatus: UInt16
     let status: UInt16
     
-    enum ReceptionStatus: UInt8 {
+    public enum ReceptionStatus: UInt8 {
         case complete = 0x06
         case frameError = 0x15
         case fromPC = 0x00
     }
     
-    init(acknowledge: ReceptionStatus, nr: UInt16 = 0, devStatus: UInt16 = 0, status: UInt16 = 0) {
+    public init(acknowledge: ReceptionStatus, nr: UInt16 = 0, devStatus: UInt16 = 0, status: UInt16 = 0) {
         self.acknowledge = acknowledge
         self.nr = nr
         self.devStatus = devStatus
         self.status = status
     }
     
-    init?(bytes: [UInt8]) {
+    public init?(bytes: [UInt8]) {
         precondition(bytes.count == 7, "Command Information is of the wrong size: \(bytes)")
         
         if let ack = ReceptionStatus(rawValue: bytes[0]) {
@@ -99,11 +99,11 @@ public struct CommandInformation {
         self.status = UInt16(upper: bytes[5], lower: bytes[6])
     }
     
-    static func fromPC() -> CommandInformation {
+    public static func fromPC() -> CommandInformation {
         return CommandInformation(bytes: [0,0,0,0,0,0,0])!
     }
     
-    var bytes: [UInt8] {
+    public var bytes: [UInt8] {
         var response: [UInt8] = []
         response.append(self.acknowledge.rawValue)
         
@@ -119,7 +119,7 @@ public struct CommandInformation {
         return response
     }
     
-    var prettyDescription: String {
+    public var prettyDescription: String {
         return "\(self.acknowledge)"
     }
 }
@@ -136,13 +136,13 @@ public struct Frame: CustomStringConvertible {
     let data: [UInt8]
     let verification: VerificationMode
     
-    enum VerificationMode {
+    public enum VerificationMode {
         case none
         case mod256
         case crc16
     }
 
-    init?(bytes: [UInt8], verificationMethod: VerificationMode) {
+    public init?(bytes: [UInt8], verificationMethod: VerificationMode) {
         var input = bytes
         
         // Check first byte
@@ -207,7 +207,7 @@ public struct Frame: CustomStringConvertible {
         self.verification = verificationMethod
     }
     
-    init(address: UInt8 = 0, command: Command, information: CommandInformation = CommandInformation.fromPC(), dataOffset: UInt16 = 0x0C, data: [UInt8] = [], verification: VerificationMode = .crc16) {
+    public init(address: UInt8 = 0, command: Command, information: CommandInformation = CommandInformation.fromPC(), dataOffset: UInt16 = 0x0C, data: [UInt8] = [], verification: VerificationMode = .crc16) {
         self.address = address
         self.command = command
         self.information = information
@@ -216,7 +216,7 @@ public struct Frame: CustomStringConvertible {
         self.verification = verification
     }
     
-    var bytes: [UInt8] {
+    public var bytes: [UInt8] {
         var temp: [UInt8] = []
         temp.append(0x7E)                           // Start
         temp.append(address)                        // Address
@@ -245,20 +245,20 @@ public struct Frame: CustomStringConvertible {
         return(temp)
     }
 
-    static func createStartPrint() -> Frame {
+    public static func createStartPrint() -> Frame {
         let data: [UInt8] = [0x7E,0x00,0x18,0x00,0x0C,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x1E,0xED,0x7F]
         return Frame(bytes: data, verificationMethod: .crc16)!
     }
     
     // let f = Frame.downloadRemoteBuffer(address: 0, message: "Hello, World!")
-    static func downloadRemoteBuffer(address: UInt8, message: String) -> Frame {
+    public static func downloadRemoteBuffer(address: UInt8, message: String) -> Frame {
         let data: [UInt8] = Array(message.utf8)
         let count: UInt16 = UInt16(data.count)
         let buffer = [count.lowerByte] + [count.upperByte] + data
         return Frame(address: address, command: .downloadRemoteBuffer, data: buffer)
     }
     
-    enum CountType: UInt8 {
+    public enum CountType: UInt8 {
         case total = 0x00
         case printing = 0x01
         case editing = 0x02
@@ -271,7 +271,7 @@ public struct Frame: CustomStringConvertible {
     
     // [FileCount] 2 bytes Number of message
     // [FilleNameList] array of file names, each file name occupies 32 bytes
-    func decodeGetMessageList() -> [String] {
+    public func decodeGetMessageList() -> [String] {
         precondition(self.command == .getMessageList)
         
         let messageCount: UInt16 = UInt16(upper: self.data[1], lower: self.data[0])
@@ -280,40 +280,40 @@ public struct Frame: CustomStringConvertible {
         return [""]
     }
     
-    func decodePrintWidth() -> UInt16 {
+    public func decodePrintWidth() -> UInt16 {
         precondition(self.command == .setPrintWidth || self.command == .getPrintWidth)
         precondition(self.data.count == 3) // I don't understand why it needs 3 values?
         return UInt16(upper:self.data[0], lower: self.data[1])
     }
     
-    static func decodePrintCount(_ data: [UInt8]) -> Int {
+    public static func decodePrintCount(_ data: [UInt8]) -> Int {
         precondition(data.count == 4, "Wrong number of bytes when decoding print count")
         return Int(bytes: data)
     }
     
-    static func getPrintCount(address: UInt8 = 0, countType: CountType, verification: VerificationMode = .crc16) -> Frame {
+    public static func getPrintCount(address: UInt8 = 0, countType: CountType, verification: VerificationMode = .crc16) -> Frame {
         return Frame(address: address, command: .getPrintCount, data: [countType.rawValue], verification: verification)
     }
     
-    struct ReverseSettings: Equatable {
+    public struct ReverseSettings: Equatable {
         let horizontal: Bool
         let vertical: Bool
     }
     
-    static func setReverse(address: UInt8 = 0, horizontal: Bool, vertical: Bool, verification: VerificationMode = .crc16) -> Frame {
+    public static func setReverse(address: UInt8 = 0, horizontal: Bool, vertical: Bool, verification: VerificationMode = .crc16) -> Frame {
         return Frame(address: address, command: .setReverseMessage, data: [vertical ? 1 : 0, horizontal ? 1 : 0], verification: verification)
     }
     
-    static func setReverse(address: UInt8 = 0, settings: ReverseSettings, verification: VerificationMode = .crc16) -> Frame {
+    public static func setReverse(address: UInt8 = 0, settings: ReverseSettings, verification: VerificationMode = .crc16) -> Frame {
         return Frame(address: address, command: .setReverseMessage, data: [settings.vertical ? 1 : 0, settings.horizontal ? 1 : 0], verification: verification)
     }
     
-    static func decodeGetReverse(_ data: [UInt8]) -> ReverseSettings {
+    public static func decodeGetReverse(_ data: [UInt8]) -> ReverseSettings {
         precondition(data.count == 2, "wrong number of bytes when decodint get reverse message")
         return ReverseSettings(horizontal: data[0] == 1 ? true : false, vertical: data[1] == 1 ? true : false)
     }
     
-    static func decodeDownloadRemoteBuffer(_ data: [UInt8]) -> String? {
+    public static func decodeDownloadRemoteBuffer(_ data: [UInt8]) -> String? {
         switch data.count {
         case 2:
             return ""
@@ -336,7 +336,7 @@ public struct Frame: CustomStringConvertible {
     // [0, setPrintWidth, Acknowledge, [0x56 0x00]]
     
     
-    var description: String {
+    public var description: String {
         var output: String = ""
         for byte in self.bytes {
             output.append(String(byte, radix: 16)+",")
@@ -344,7 +344,7 @@ public struct Frame: CustomStringConvertible {
         return output
     }
     
-    var prettyDescription: String {
+    public var prettyDescription: String {
         var output: String = "["
         output.append("\(self.address),")
         output.append("\(self.command),")
@@ -353,7 +353,7 @@ public struct Frame: CustomStringConvertible {
         return output
     }
     
-    static func mod256(_ data: Data) -> UInt8 {
+    public static func mod256(_ data: Data) -> UInt8 {
         return 0xFF
     }
     
@@ -365,7 +365,7 @@ public struct Frame: CustomStringConvertible {
     // Initial value: 0xFFFF.
     // Data reversal: LSB First.
     // XOR value: 0xFFFF.
-    static func crc16_x25(_ data: [UInt8]) -> UInt16 {
+    public static func crc16_x25(_ data: [UInt8]) -> UInt16 {
         var crc: UInt16 = 0xffff // Initial value
         
         for byte in data {
