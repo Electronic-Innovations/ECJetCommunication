@@ -65,7 +65,7 @@ final class ECJetCommunicationTests: XCTestCase {
         let frame = Frame(bytes: bytes, verificationMethod: .crc16)!
         XCTAssertEqual(frame.address, 0)
         XCTAssertEqual(frame.command, .setPrintHeight)
-        XCTAssertEqual(frame.information.acknowledge, CommandInformation.ReceptionStatus.complete)
+        XCTAssertEqual(frame.information.acknowledge, ReceptionStatus.complete)
     }
     
     func testGetPrintHeightPacket() throws {
@@ -78,7 +78,7 @@ final class ECJetCommunicationTests: XCTestCase {
         let frame = Frame(bytes: bytes, verificationMethod: .crc16)!
         XCTAssertEqual(frame.address, 0)
         XCTAssertEqual(frame.command, .getPrintHeight)
-        XCTAssertEqual(frame.information.acknowledge, CommandInformation.ReceptionStatus.complete)
+        XCTAssertEqual(frame.information.acknowledge, ReceptionStatus.complete)
         XCTAssertEqual(frame.data, [0x96])
     }
     
@@ -92,7 +92,7 @@ final class ECJetCommunicationTests: XCTestCase {
         let frame = Frame(bytes: bytes, verificationMethod: .crc16)!
         XCTAssertEqual(frame.address, 0)
         XCTAssertEqual(frame.command, .setPrintCount)
-        XCTAssertEqual(frame.information.acknowledge, CommandInformation.ReceptionStatus.complete)
+        XCTAssertEqual(frame.information.acknowledge, ReceptionStatus.complete)
     }
     
     func testGetPrintCountPacket() throws {
@@ -105,7 +105,7 @@ final class ECJetCommunicationTests: XCTestCase {
         let frame = Frame(bytes: bytes, verificationMethod: .crc16)!
         XCTAssertEqual(frame.address, 0)
         XCTAssertEqual(frame.command, .getPrintCount)
-        XCTAssertEqual(frame.information.acknowledge, CommandInformation.ReceptionStatus.complete)
+        XCTAssertEqual(frame.information.acknowledge, ReceptionStatus.complete)
         XCTAssertEqual(Frame.decodePrintCount(frame.data), 0x01A2)
     }
     
@@ -122,7 +122,7 @@ final class ECJetCommunicationTests: XCTestCase {
         let frame = Frame(bytes: bytes, verificationMethod: .crc16)!
         XCTAssertEqual(frame.address, 0)
         XCTAssertEqual(frame.command, .getJetStatus)
-        XCTAssertEqual(frame.information.acknowledge, CommandInformation.ReceptionStatus.complete)
+        XCTAssertEqual(frame.information.acknowledge, ReceptionStatus.complete)
         XCTAssertEqual(frame.data, [0xAA,0xAA,0x00,0xAE,0x83,0x0C,0x59,0x52,0x00,0x00])
     }
     
@@ -136,7 +136,7 @@ final class ECJetCommunicationTests: XCTestCase {
         let frame = Frame(bytes: bytes, verificationMethod: .crc16)!
         XCTAssertEqual(frame.address, 0)
         XCTAssertEqual(frame.command, .startPrint)
-        XCTAssertEqual(frame.information.acknowledge, CommandInformation.ReceptionStatus.complete)
+        XCTAssertEqual(frame.information.acknowledge, ReceptionStatus.complete)
     }
     
     func testStopPrintPacket() throws {
@@ -149,7 +149,7 @@ final class ECJetCommunicationTests: XCTestCase {
         let frame = Frame(bytes: bytes, verificationMethod: .crc16)!
         XCTAssertEqual(frame.address, 0)
         XCTAssertEqual(frame.command, .stopPrint)
-        XCTAssertEqual(frame.information.acknowledge, CommandInformation.ReceptionStatus.complete)
+        XCTAssertEqual(frame.information.acknowledge, ReceptionStatus.complete)
     }
     
     func testSetReversePacket() throws {
@@ -162,7 +162,7 @@ final class ECJetCommunicationTests: XCTestCase {
         let frame = Frame(bytes: bytes, verificationMethod: .crc16)!
         XCTAssertEqual(frame.address, 0)
         XCTAssertEqual(frame.command, .setReverseMessage)
-        XCTAssertEqual(frame.information.acknowledge, CommandInformation.ReceptionStatus.complete)
+        XCTAssertEqual(frame.information.acknowledge, ReceptionStatus.complete)
     }
     
     func testGetReversePacket() throws {
@@ -175,7 +175,7 @@ final class ECJetCommunicationTests: XCTestCase {
         let frame = Frame(bytes: bytes, verificationMethod: .crc16)!
         XCTAssertEqual(frame.address, 0)
         XCTAssertEqual(frame.command, .getReverseMessage)
-        XCTAssertEqual(frame.information.acknowledge, CommandInformation.ReceptionStatus.complete)
+        XCTAssertEqual(frame.information.acknowledge, ReceptionStatus.complete)
         XCTAssertEqual(Frame.decodeGetReverse(frame.data), Frame.ReverseSettings(horizontal: false, vertical: true))
     }
     
@@ -189,7 +189,7 @@ final class ECJetCommunicationTests: XCTestCase {
         let frame = Frame(bytes: bytes, verificationMethod: .crc16)!
         XCTAssertEqual(frame.address, 0)
         XCTAssertEqual(frame.command, .downloadRemoteBuffer)
-        XCTAssertEqual(frame.information.acknowledge, CommandInformation.ReceptionStatus.complete)
+        XCTAssertEqual(frame.information.acknowledge, ReceptionStatus.complete)
         XCTAssertEqual(frame.data, [0x00])
     }
 

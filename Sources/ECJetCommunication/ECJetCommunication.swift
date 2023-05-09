@@ -65,17 +65,17 @@ public enum Command: UInt16 {
     
 }
 
+public enum ReceptionStatus: UInt8 {
+    case complete = 0x06
+    case frameError = 0x15
+    case fromPC = 0x00
+}
+
 public struct CommandInformation {
     let acknowledge: ReceptionStatus
     let nr: UInt16
     let devStatus: UInt16
     let status: UInt16
-    
-    public enum ReceptionStatus: UInt8 {
-        case complete = 0x06
-        case frameError = 0x15
-        case fromPC = 0x00
-    }
     
     public init(acknowledge: ReceptionStatus, nr: UInt16 = 0, devStatus: UInt16 = 0, status: UInt16 = 0) {
         self.acknowledge = acknowledge
