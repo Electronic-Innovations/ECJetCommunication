@@ -53,4 +53,39 @@ public extension Array {
         }
         return [Element](response).reversed()
     }
+    
+    func chunked(into size: Int) -> [[Element]] {
+        return stride(from: 0, to: count, by: size).map {
+            Array(self[$0 ..< Swift.min($0 + size, count)])
+        }
+    }
+}
+
+// https://gist.github.com/totocaster/3a1f008c780793b86a6c4d2d6ae735c4
+extension String {
+    func sanitized() -> String {
+        // see for ressoning on charachrer sets https://superuser.com/a/358861
+        let invalidCharacters = CharacterSet(charactersIn: "\\/:*?\"<>|")
+            .union(.newlines)
+            .union(.illegalCharacters)
+            .union(.controlCharacters)
+        
+        return self
+            .components(separatedBy: invalidCharacters)
+            .joined(separator: "")
+    }
+    
+    mutating func sanitize() -> Void {
+        self = self.sanitized()
+    }
+    
+    func whitespaceCondenced() -> String {
+        return self.components(separatedBy: .whitespacesAndNewlines)
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+    }
+    
+    mutating func condenceWhitespace() -> Void {
+        self = self.whitespaceCondenced()
+    }
 }

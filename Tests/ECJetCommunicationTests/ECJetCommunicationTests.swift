@@ -41,13 +41,6 @@ final class ECJetCommunicationTests: XCTestCase {
         XCTAssertEqual(result, 0xA4C3)
     }
     
-    func testDecodeMessageList() throws {
-        let data: [UInt8] = [7, 0, 50, 48, 48, 48, 45, 67, 104, 117, 106, 105, 95, 69, 78, 46, 110, 109, 107, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 72, 105, 103, 104, 83, 112, 101, 101, 100, 95, 49, 54, 95, 49, 46, 110, 109, 107, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 72, 105, 103, 104, 83, 112, 101, 101, 100, 95, 49, 54, 95, 50, 46, 110, 109, 107, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 72, 105, 103, 104, 83, 112, 101, 101, 100, 95, 49, 54, 95, 51, 46, 110, 109, 107, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 72, 105, 103, 104, 83, 112, 101, 101, 100, 95, 53, 95, 49, 46, 110, 109, 107, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 72, 105, 103, 104, 83, 112, 101, 101, 100, 95, 53, 95, 50, 46, 110, 109, 107, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 84, 69, 83, 84, 46, 110, 109, 107, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        let frame = Frame(address: 0, command: .getMessageList, information: CommandInformation(acknowledge: .complete), data: data)
-        let decodedMessageList = frame.decodeGetMessageList()
-        let actualMessageList: [String] = ["Something should be here"]
-        XCTAssertEqual(decodedMessageList, actualMessageList)
-    }
     
     func testFrame() throws {
         let f = Frame.createStartPrint()
@@ -109,7 +102,10 @@ final class ECJetCommunicationTests: XCTestCase {
         XCTAssertEqual(Frame.decodePrintCount(frame.data), 0x01A2)
     }
     
-    
+    func testDecodePrintWidth() throws {
+        let frame = Frame(address: 0, command: .getPrintWidth, data: [0,5])
+        XCTAssertEqual(frame.decodePrintWidth(), 5)
+    }
     
     func testGetJetStatusPacket() throws {
         let bytes:[UInt8] = [0x7E,0x00,0x14,0x00,0x0C,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xE1,0x0F,0x7F]
@@ -191,6 +187,33 @@ final class ECJetCommunicationTests: XCTestCase {
         XCTAssertEqual(frame.command, .downloadRemoteBuffer)
         XCTAssertEqual(frame.information.acknowledge, ReceptionStatus.complete)
         XCTAssertEqual(frame.data, [0x00])
+    }
+    
+    func testDecodeFontList() throws {
+        let data: [UInt8] = [41, 53, 32, 72, 105, 103, 104, 67, 97, 112, 115, 0, 0, 0, 0, 0, 0, 55, 32, 72, 105, 103, 104, 67, 97, 112, 115, 73, 0, 0, 0, 0, 0, 55, 32, 72, 105, 103, 104, 67, 97, 112, 115, 0, 0, 0, 0, 0, 0, 55, 32, 66, 101, 110, 103, 97, 108, 101, 115, 101, 0, 0, 0, 0, 0, 57, 32, 72, 105, 103, 104, 67, 97, 112, 115, 0, 0, 0, 0, 0, 0, 57, 32, 66, 101, 110, 103, 97, 108, 101, 115, 101, 0, 0, 0, 0, 0, 49, 50, 32, 72, 105, 103, 104, 67, 97, 112, 115, 82, 0, 0, 0, 0, 49, 50, 32, 66, 101, 110, 103, 97, 108, 101, 115, 101, 0, 0, 0, 0, 49, 50, 32, 72, 105, 103, 104, 67, 97, 112, 115, 0, 0, 0, 0, 0, 49, 54, 32, 72, 105, 103, 104, 70, 117, 108, 108, 0, 0, 0, 0, 0, 49, 54, 32, 66, 101, 110, 103, 97, 108, 101, 115, 101, 0, 0, 0, 0, 49, 54, 32, 72, 105, 103, 104, 67, 97, 112, 115, 0, 0, 0, 0, 0, 50, 52, 32, 66, 101, 110, 103, 97, 108, 101, 115, 101, 0, 0, 0, 0, 50, 52, 32, 72, 105, 103, 104, 70, 117, 108, 108, 0, 0, 0, 0, 0, 50, 52, 32, 72, 105, 103, 104, 67, 97, 112, 115, 0, 0, 0, 0, 0, 51, 50, 32, 72, 105, 103, 104, 70, 117, 108, 108, 0, 0, 0, 0, 0, 57, 32, 67, 104, 105, 110, 101, 115, 101, 0, 0, 0, 0, 0, 0, 0, 49, 50, 32, 67, 104, 105, 110, 101, 115, 101, 0, 0, 0, 0, 0, 0, 49, 54, 32, 67, 104, 105, 110, 101, 115, 101, 0, 0, 0, 0, 0, 0, 50, 52, 32, 67, 104, 105, 110, 101, 115, 101, 0, 0, 0, 0, 0, 0, 55, 32, 65, 114, 97, 98, 105, 99, 0, 0, 0, 0, 0, 0, 0, 0, 57, 32, 65, 114, 97, 98, 105, 99, 0, 0, 0, 0, 0, 0, 0, 0, 49, 50, 32, 65, 114, 97, 98, 105, 99, 0, 0, 0, 0, 0, 0, 0, 49, 54, 32, 65, 114, 97, 98, 105, 99, 0, 0, 0, 0, 0, 0, 0, 50, 48, 32, 65, 114, 97, 98, 105, 99, 0, 0, 0, 0, 0, 0, 0, 50, 52, 32, 65, 114, 97, 98, 105, 99, 0, 0, 0, 0, 0, 0, 0, 51, 50, 32, 65, 114, 97, 98, 105, 99, 0, 0, 0, 0, 0, 0, 0, 49, 50, 32, 75, 111, 114, 101, 97, 0, 0, 0, 0, 0, 0, 0, 0, 49, 54, 32, 75, 111, 114, 101, 97, 0, 0, 0, 0, 0, 0, 0, 0, 50, 52, 32, 75, 111, 114, 101, 97, 0, 0, 0, 0, 0, 0, 0, 0, 55, 32, 70, 97, 114, 115, 105, 0, 0, 0, 0, 0, 0, 0, 0, 0, 57, 32, 70, 97, 114, 115, 105, 0, 0, 0, 0, 0, 0, 0, 0, 0, 49, 50, 32, 70, 97, 114, 115, 105, 0, 0, 0, 0, 0, 0, 0, 0, 49, 53, 32, 70, 97, 114, 115, 105, 0, 0, 0, 0, 0, 0, 0, 0, 49, 54, 32, 70, 97, 114, 115, 105, 0, 0, 0, 0, 0, 0, 0, 0, 50, 49, 32, 70, 97, 114, 115, 105, 0, 0, 0, 0, 0, 0, 0, 0, 57, 32, 67, 104, 105, 110, 101, 115, 101, 70, 0, 0, 0, 0, 0, 0, 49, 50, 32, 67, 104, 105, 110, 101, 115, 101, 70, 0, 0, 0, 0, 0, 49, 54, 32, 67, 104, 105, 110, 101, 115, 101, 70, 0, 0, 0, 0, 0, 50, 52, 32, 67, 104, 105, 110, 101, 115, 101, 70, 0, 0, 0, 0, 0, 55, 32, 67, 104, 105, 110, 101, 115, 101, 0, 0, 0, 0, 0, 0, 0]
+        let frame = Frame(address: 0, command: .getFontList, information: CommandInformation(acknowledge: .complete), data: data)
+        let decodedFontList: [String] = frame.decodeGetFontList()
+        let actualFontList: [String] = ["5 HighCaps",
+                                        "7 HighCapsI", "7 HighCaps", "7 Bengalese",
+                                        "9 HighCaps", "9 Bengalese",
+                                        "12 HighCapsR", "12 Bengalese", "12 HighCaps",
+                                        "16 HighFull", "16 Bengalese", "16 HighCaps",
+                                        "24 Bengalese", "24 HighFull", "24 HighCaps",
+                                        "32 HighFull",
+                                        "9 Chinese", "12 Chinese", "16 Chinese", "24 Chinese",
+                                        "7 Arabic", "9 Arabic", "12 Arabic", "16 Arabic", "20 Arabic", "24 Arabic", "32 Arabic",
+                                        "12 Korea", "16 Korea", "24 Korea",
+                                        "7 Farsi", "9 Farsi", "12 Farsi", "15 Farsi", "16 Farsi", "21 Farsi",
+                                        "9 ChineseF", "12 ChineseF", "16 ChineseF", "24 ChineseF", "7 Chinese"]
+        XCTAssertEqual(decodedFontList, actualFontList)
+    }
+    
+    func testDecodeMessageList() throws {
+        let data: [UInt8] = [7, 0, 50, 48, 48, 48, 45, 67, 104, 117, 106, 105, 95, 69, 78, 46, 110, 109, 107, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 72, 105, 103, 104, 83, 112, 101, 101, 100, 95, 49, 54, 95, 49, 46, 110, 109, 107, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 72, 105, 103, 104, 83, 112, 101, 101, 100, 95, 49, 54, 95, 50, 46, 110, 109, 107, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 72, 105, 103, 104, 83, 112, 101, 101, 100, 95, 49, 54, 95, 51, 46, 110, 109, 107, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 72, 105, 103, 104, 83, 112, 101, 101, 100, 95, 53, 95, 49, 46, 110, 109, 107, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 72, 105, 103, 104, 83, 112, 101, 101, 100, 95, 53, 95, 50, 46, 110, 109, 107, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 84, 69, 83, 84, 46, 110, 109, 107, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        let frame = Frame(address: 0, command: .getMessageList, information: CommandInformation(acknowledge: .complete), data: data)
+        let decodedMessageList = frame.decodeGetMessageList()
+        let actualMessageList: [String] = ["2000-Chuji_EN.nmk", "HighSpeed_16_1.nmk", "HighSpeed_16_2.nmk", "HighSpeed_16_3.nmk", "HighSpeed_5_1.nmk", "HighSpeed_5_2.nmk", "TEST.nmk"]
+        XCTAssertEqual(decodedMessageList, actualMessageList)
     }
 
 

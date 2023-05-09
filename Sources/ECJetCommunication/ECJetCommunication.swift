@@ -127,7 +127,6 @@ public struct CommandInformation {
 
 
 public struct Frame: CustomStringConvertible {
-    //let bytes: [UInt8]
     
     public let address: UInt8
     public let command: Command
@@ -136,12 +135,42 @@ public struct Frame: CustomStringConvertible {
     public let data: [UInt8]
     public let verification: VerificationMode
     
+    public var bytes: [UInt8] {
+        var temp: [UInt8] = []
+        temp.append(0x7E)                           // Start
+        temp.append(address)                        // Address
+        temp.append(command.rawValue.lowerByte)     // Command
+        temp.append(command.rawValue.upperByte)
+        temp.append(0x0C)                           // Data Offset
+        temp.append(0x00)
+        for byte in information.bytes {             // Information
+            temp.append(byte)
+        }
+        for byte in data {                          // Data
+            temp.append(byte)
+        }
+        switch(verification) {                      // CRC
+        case .none:
+            break
+        case .mod256:
+            break
+        case .crc16:
+            let crc = Frame.crc16_x25([UInt8](temp[1...]))
+            temp.append(crc.lowerByte)
+            temp.append(crc.upperByte)
+        }
+        
+        temp.append(0x7F)                           // End
+        return(temp)
+    }
+    
     public enum VerificationMode {
         case none
         case mod256
         case crc16
     }
-
+    
+    // MARK: - Initialisers
     public init?(bytes: [UInt8], verificationMethod: VerificationMode) {
         var input = bytes
         
@@ -216,35 +245,8 @@ public struct Frame: CustomStringConvertible {
         self.verification = verification
     }
     
-    public var bytes: [UInt8] {
-        var temp: [UInt8] = []
-        temp.append(0x7E)                           // Start
-        temp.append(address)                        // Address
-        temp.append(command.rawValue.lowerByte)     // Command
-        temp.append(command.rawValue.upperByte)
-        temp.append(0x0C)                           // Data Offset
-        temp.append(0x00)
-        for byte in information.bytes {                   // Information
-            temp.append(byte)
-        }
-        for byte in data {                          // Data
-            temp.append(byte)
-        }
-        switch(verification) {                      // CRC
-        case .none:
-            break
-        case .mod256:
-            break
-        case .crc16:
-            let crc = Frame.crc16_x25([UInt8](temp[1...]))
-            temp.append(crc.lowerByte)
-            temp.append(crc.upperByte)
-        }
-        
-        temp.append(0x7F)                           // End
-        return(temp)
-    }
-
+    
+    // MARK: - Generating Frames
     public static func createStartPrint() -> Frame {
         let data: [UInt8] = [0x7E,0x00,0x18,0x00,0x0C,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x1E,0xED,0x7F]
         return Frame(bytes: data, verificationMethod: .crc16)!
@@ -265,27 +267,27 @@ public struct Frame: CustomStringConvertible {
     }
     
     
-    // ----- Decoding data inside frames -----
+    // MARK: - Decoding data inside frames
     // You should have a valid frame and know what type it is. Then you can use a function from here to
     // reliably decode the data.
     
-    // [FileCount] 2 bytes Number of message
-    // [FilleNameList] array of file names, each file name occupies 32 bytes
-    public func decodeGetMessageList() -> [String] {
-        precondition(self.command == .getMessageList)
-        
-        let messageCount: UInt16 = UInt16(upper: self.data[1], lower: self.data[0])
-        precondition(self.data.count == ((messageCount * 32) + 2))
-        
-        return [""]
-    }
-    
+    // MARK: Get Print Width 0x02
+    // 2 bytes print width value
     public func decodePrintWidth() -> UInt16 {
         precondition(self.command == .setPrintWidth || self.command == .getPrintWidth)
-        precondition(self.data.count == 3) // I don't understand why it needs 3 values?
+        precondition(self.data.count == 2) // I don't understand why it needs 3 values?
         return UInt16(upper:self.data[0], lower: self.data[1])
     }
     
+    // MARK: Get Print Delay 0x04
+    // 2 bytes print delay value
+    public func decodePrintDelay() -> UInt16 {
+        precondition(self.command == .getPrintDelay)
+        precondition(self.data.count == 2)
+        return UInt16(upper: self.data[0], lower: self.data[1])
+    }
+    
+    // MARK: Get Print Count 0x0A
     public static func decodePrintCount(_ data: [UInt8]) -> Int {
         precondition(data.count == 4, "Wrong number of bytes when decoding print count")
         return Int(bytes: data)
@@ -295,6 +297,7 @@ public struct Frame: CustomStringConvertible {
         return Frame(address: address, command: .getPrintCount, data: [countType.rawValue], verification: verification)
     }
     
+    // MARK: Set Reverse Message 0x0B
     public struct ReverseSettings: Equatable {
         let horizontal: Bool
         let vertical: Bool
@@ -308,6 +311,7 @@ public struct Frame: CustomStringConvertible {
         return Frame(address: address, command: .setReverseMessage, data: [settings.vertical ? 1 : 0, settings.horizontal ? 1 : 0], verification: verification)
     }
     
+    // MARK: Get Reverse Message 0x0C
     public static func decodeGetReverse(_ data: [UInt8]) -> ReverseSettings {
         precondition(data.count == 2, "wrong number of bytes when decodint get reverse message")
         return ReverseSettings(horizontal: data[0] == 1 ? true : false, vertical: data[1] == 1 ? true : false)
@@ -324,18 +328,59 @@ public struct Frame: CustomStringConvertible {
             let bytes = [UInt8](data.dropFirst(2))
             return String(bytes: bytes, encoding: .utf8)
         }
-        
     }
     
-    // let address: UInt8
-    // let command: Command
-    // let dataOffset: UInt16
-    // let information: CommandInformation
-    // let data: [UInt8]
-    // let verification: VerificationMode
-    // [0, setPrintWidth, Acknowledge, [0x56 0x00]]
+    // MARK: Get Font List 0x1D
+    // [FontCount] 1 byte Number of fonts
+    // [FontNameList] An array of font names, each font name occupies 16 bytes
+    
+    public func decodeGetFontList() -> [String] {
+        precondition(self.command == .getFontList)
+        var buffer = self.data
+        let fontCount: UInt8 = buffer[0]
+        precondition(self.data.count == ((Int(fontCount) * 16) + 1))
+        buffer = [UInt8](buffer.dropFirst())
+        
+        let fontBytes = buffer.chunked(into: 16)
+        precondition(fontBytes.count == fontCount)
+        
+        let fontList = fontBytes.map{ bytes in
+            var font = ""
+            if let f = String(bytes: bytes, encoding: .utf8) {
+                font = f.sanitized().whitespaceCondenced()
+            }
+            return font
+        }
+        
+        return fontList
+    }
     
     
+    // MARK: Get Message List 0x1E
+    // [FileCount] 2 bytes Number of message
+    // [FilleNameList] array of file names, each file name occupies 32 bytes
+    public func decodeGetMessageList() -> [String] {
+        precondition(self.command == .getMessageList)
+        var buffer = self.data
+        let messageCount: UInt16 = UInt16(upper: buffer[1], lower: buffer[0])
+        precondition(self.data.count == ((messageCount * 32) + 2))
+        buffer = [UInt8](buffer.dropFirst(2))
+        
+        let messageBytes = buffer.chunked(into: 32)
+        precondition(messageBytes.count == messageCount)
+        
+        let messageList = messageBytes.map{ bytes in
+            var message = ""
+            if let m = String(bytes: bytes, encoding: .utf8) {
+                message = m.sanitized().whitespaceCondenced()
+            }
+            return message
+        }
+        
+        return messageList
+    }
+    
+    // MARK: - Print Out Methods
     public var description: String {
         var output: String = ""
         for byte in self.bytes {
@@ -353,6 +398,7 @@ public struct Frame: CustomStringConvertible {
         return output
     }
     
+    // MARK: - Checksum Methods
     public static func mod256(_ data: Data) -> UInt8 {
         return 0xFF
     }
