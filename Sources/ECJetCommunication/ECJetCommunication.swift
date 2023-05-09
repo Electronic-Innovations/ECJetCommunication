@@ -13,7 +13,7 @@ import Foundation
 //  - Extract information from it automatically
 //  - Bunch of static functions for creating frames of certain types
 
-enum Command: UInt16 {
+public enum Command: UInt16 {
     case setPrintWidth = 0x0001
     case getPrintWidth = 0x0002
     case setPrintDelay = 0x0003
@@ -65,7 +65,7 @@ enum Command: UInt16 {
     
 }
 
-struct CommandInformation {
+public struct CommandInformation {
     let acknowledge: ReceptionStatus
     let nr: UInt16
     let devStatus: UInt16
@@ -126,7 +126,7 @@ struct CommandInformation {
 
 
 
-struct Frame: CustomStringConvertible {
+public struct Frame: CustomStringConvertible {
     //let bytes: [UInt8]
     
     let address: UInt8
