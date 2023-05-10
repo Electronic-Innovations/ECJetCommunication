@@ -287,6 +287,12 @@ public struct Frame: CustomStringConvertible {
         return UInt16(upper: self.data[0], lower: self.data[1])
     }
     
+    public func decodeTriggerRepeat() -> UInt8 {
+        precondition(self.command == .getTriggerRepeat)
+        precondition(self.data.count == 1)
+        return UInt8(self.data[0])
+    }
+    
     // MARK: Get Print Count 0x0A
     public static func decodePrintCount(_ data: [UInt8]) -> Int {
         precondition(data.count == 4, "Wrong number of bytes when decoding print count")
