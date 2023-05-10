@@ -275,7 +275,7 @@ public struct Frame: CustomStringConvertible {
     // 2 bytes print width value
     public func decodePrintWidth() -> UInt16 {
         precondition(self.command == .setPrintWidth || self.command == .getPrintWidth)
-        precondition(self.data.count == 2) // I don't understand why it needs 3 values?
+        precondition(self.data.count == 3) // I don't understand why it needs 3 values?
         return UInt16(upper:self.data[0], lower: self.data[1])
     }
     
@@ -429,6 +429,46 @@ public struct Frame: CustomStringConvertible {
         return ~crc // crc ^ Xorout
     }
 
+    // MARK: - Character Escaping
+    // TODO: Character Escaping
+    
+    /*
+    // Original Code
+    void MainWindow::changeData(QByteArray &ba)
+    {
+        for(int i = 0; i < ba.length() * 2; i++)
+        {
+            if(ba.toHex().at(i) == '7')
+            {
+                //0x7d escapes to 0x7d 0x5d
+                if(ba.toHex().at(i + 1) == 'd')
+                {
+                    int num = ba.indexOf(0x7d);
+                    ba.remove(num, 1);
+                    ba.insert(num, 0x7d);
+                    ba.insert(num + 1, 0x5d);
+                }
+                //0x7e escapes to 0x7d 0x5e
+                if(ba.toHex().at(i + 1) == 'e')
+                {
+                    int num = ba.indexOf(0x7e);
+                    ba.remove(num, 1);
+                    ba.insert(num, 0x7d);
+                    ba.insert(num + 1, 0x5e);
+                }
+                //0x7f escapes to 0x7d 0x5f
+                if(ba.toHex().at(i + 1) == 'f')
+                {
+                    int num = ba.indexOf(0x7f);
+                    ba.remove(num, 1);
+                    ba.insert(num, 0x7d);
+                    ba.insert(num + 1, 0x5f);
+                }
+            }
+            i++;//Skip a byte to avoid the situation where e7e8 judges 7e
+        }
+    }
+     */
 }
 
 
