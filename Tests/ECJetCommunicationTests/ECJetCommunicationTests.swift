@@ -103,8 +103,14 @@ final class ECJetCommunicationTests: XCTestCase {
     }
     
     func testDecodePrintWidth() throws {
-        let frame = Frame(address: 0, command: .getPrintWidth, data: [0,5])
-        XCTAssertEqual(frame.decodePrintWidth(), 5)
+        XCTAssertEqual(Frame(address: 0, command: .getPrintWidth, data: [80,0,1]).decodePrintWidth(), 0.08, accuracy: Double.ulpOfOne)
+        XCTAssertEqual(Frame(address: 0, command: .getPrintWidth, data: [44,1,1]).decodePrintWidth(), 0.3, accuracy: Double.ulpOfOne)
+        XCTAssertEqual(Frame(address: 0, command: .getPrintWidth, data: [248,2,1]).decodePrintWidth(), 0.76, accuracy: Double.ulpOfOne)
+        XCTAssertEqual(Frame(address: 0, command: .getPrintWidth, data: [22,3,1]).decodePrintWidth(), 0.79, accuracy: Double.ulpOfOne)
+        XCTAssertEqual(Frame(address: 0, command: .getPrintWidth, data: [62,3,1]).decodePrintWidth(), 0.83, accuracy: Double.ulpOfOne)
+        XCTAssertEqual(Frame(address: 0, command: .getPrintWidth, data: [102,3,1]).decodePrintWidth(), 0.87, accuracy: Double.ulpOfOne)
+        XCTAssertEqual(Frame(address: 0, command: .getPrintWidth, data: [142,3,1]).decodePrintWidth(), 0.91, accuracy: Double.ulpOfOne)
+        XCTAssertEqual(Frame(address: 0, command: .getPrintWidth, data: [232,253,1]).decodePrintWidth(), 65.0, accuracy: Double.ulpOfOne)
     }
     
     func testGetJetStatusPacket() throws {
@@ -214,6 +220,21 @@ final class ECJetCommunicationTests: XCTestCase {
         let decodedMessageList = frame.decodeGetMessageList()
         let actualMessageList: [String] = ["2000-Chuji_EN.nmk", "HighSpeed_16_1.nmk", "HighSpeed_16_2.nmk", "HighSpeed_16_3.nmk", "HighSpeed_5_1.nmk", "HighSpeed_5_2.nmk", "TEST.nmk"]
         XCTAssertEqual(decodedMessageList, actualMessageList)
+    }
+    
+    func testByteCapture() throws {
+        let bytes:[UInt8] = [0x7E,0x00,0x20,0x00,0x0C,0x00,0x06,0x00,0x00,0x00,0x00,0x00,0x00,0x7D,0x5D,0x7D,0x5E,0x7D,0x5F,0x79,0xE0,0x7F]
+        let frame = Frame(bytes: bytes, verificationMethod: .crc16)!
+        XCTAssertEqual(frame.data, [0x7D,0x7E,0x7F])
+    }
+    
+    func testByteEscaping() throws {
+        let frame1 = Frame(address: 0, command:.setTriggerRepeat, data: [0x7D])
+        XCTAssertEqual(frame1.bytes, [0x7E,0x00,0x0D,0x00,0x0C,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x7D,0x5D,0xF3,0x34,0x7F])
+        let frame2 = Frame(address: 0, command:.setTriggerRepeat, data: [0x7E])
+        XCTAssertEqual(frame2.bytes, [0x7E,0x00,0x0D,0x00,0x0C,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x7D,0x5E,0x68,0x06,0x7F])
+        let frame3 = Frame(address: 0, command:.setTriggerRepeat, data: [0x7F])
+        XCTAssertEqual(frame3.bytes, [0x7E,0x00,0x0D,0x00,0x0C,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x7D,0x5F,0xE1,0x17,0x7F])
     }
 
 

@@ -137,7 +137,6 @@ public struct Frame: CustomStringConvertible {
     
     public var bytes: [UInt8] {
         var temp: [UInt8] = []
-        temp.append(0x7E)                           // Start
         temp.append(address)                        // Address
         temp.append(command.rawValue.lowerByte)     // Command
         temp.append(command.rawValue.upperByte)
@@ -155,11 +154,12 @@ public struct Frame: CustomStringConvertible {
         case .mod256:
             break
         case .crc16:
-            let crc = Frame.crc16_x25([UInt8](temp[1...]))
+            let crc = Frame.crc16_x25(temp)
             temp.append(crc.lowerByte)
             temp.append(crc.upperByte)
         }
-        
+        temp = Frame.byteEscape(buffer: temp)       // Byte Escaping
+        temp.insert(0x7E, at: 0)                    // Start
         temp.append(0x7F)                           // End
         return(temp)
     }
@@ -185,6 +185,9 @@ public struct Frame: CustomStringConvertible {
             print("Last byte was wrong: \(bytes)")
             return nil
         }
+        
+        // Byte Escaping
+        input = Frame.byteCapture(buffer: input)
         
         // Check crc
         switch verificationMethod {
@@ -450,8 +453,73 @@ public struct Frame: CustomStringConvertible {
         return ~crc // crc ^ Xorout
     }
 
-    // MARK: - Character Escaping
-    // TODO: Character Escaping
+    // MARK: - Byte Escaping
+    // TODO: Byte Escaping
+    
+    static func byteEscape(buffer: [UInt8]) -> [UInt8] {
+        var result: [UInt8] = buffer
+        
+        //result.replace([0x7D], with: [0x7D, 0x5D])
+        //result.replace([0x7E], with: [0x7D, 0x5E])
+        //result.replace([0x7F], with: [0x7D, 0x5F])
+        
+        for (index, value) in result.enumerated() {
+            if value == 0x7D {
+                result.remove(at: index)
+                result.insert(contentsOf: [0x7D, 0x5D], at: index)
+            }
+        }
+        
+        for (index, value) in result.enumerated() {
+            if value == 0x7E {
+                result.remove(at: index)
+                result.insert(contentsOf: [0x7D, 0x5E], at: index)
+            }
+        }
+        
+        for (index, value) in result.enumerated() {
+            if value == 0x7F {
+                result.remove(at: index)
+                result.insert(contentsOf: [0x7D, 0x5F], at: index)
+            }
+        }
+        
+        return result
+    }
+    
+    static func byteCapture(buffer: [UInt8]) -> [UInt8] {
+        var result: [UInt8] = buffer
+        
+        //result.replace([0x7D, 0x5D], with: [0x7D])
+        //result.replace([0x7D, 0x5E], with: [0x7E])
+        //result.replace([0x7D, 0x5F], with: [0x7F])
+        
+        for index in stride(from: result.count - 1, through: 1, by: -1) {
+            if result[index] == 0x5D && result[index - 1] == 0x7D {
+                result.remove(at: index)
+                result.remove(at: index - 1)
+                result.insert(0x7D, at: index - 1)
+            }
+        }
+        
+        for index in stride(from: result.count - 1, through: 1, by: -1) {
+            if result[index] == 0x5E && result[index - 1] == 0x7D {
+                result.remove(at: index)
+                result.remove(at: index - 1)
+                result.insert(0x7E, at: index - 1)
+            }
+        }
+        
+        for index in stride(from: result.count - 1, through: 1, by: -1) {
+            if result[index] == 0x5F && result[index - 1] == 0x7D {
+                result.remove(at: index)
+                result.remove(at: index - 1)
+                result.insert(0x7F, at: index - 1)
+            }
+        }
+        
+        return result
+    }
     
     /*
     // Original Code
