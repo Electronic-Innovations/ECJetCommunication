@@ -301,6 +301,13 @@ public struct Frame: CustomStringConvertible {
         return UInt8(self.data[0])
     }
     
+    public func decodePrintInterval() -> Double {
+        precondition(self.command == .getPrintInterval)
+        precondition(self.data.count == 5)
+        let value: Double = (16777.216 * Double(self.data[3])) + (65.536 * Double(self.data[2])) + (0.256 * Double(self.data[1])) + (0.001 * Double(self.data[0]))
+        return value
+    }
+    
     // MARK: Get Print Count 0x0A
     public static func decodePrintCount(_ data: [UInt8]) -> Int {
         precondition(data.count == 4, "Wrong number of bytes when decoding print count")
