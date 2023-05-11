@@ -274,11 +274,18 @@ public struct Frame: CustomStringConvertible {
     
     // MARK: Get Print Width 0x02
     // 2 bytes print width value
-    public func decodePrintWidth() -> UInt16 {
+    public func decodePrintWidth() -> Double {
         precondition(self.command == .setPrintWidth || self.command == .getPrintWidth)
         precondition(self.data.count == 3) // I don't understand why it needs 3 values?
-        return UInt16(upper:self.data[0], lower: self.data[1])
+        let value: Double = (0.256 * Double(self.data[1])) + (0.001 * Double(self.data[0]))
+        return value
     }
+    
+    /*
+    public func encodePrintWidth(value: Double) -> [UInt8] {
+        let one = value Mod
+    }
+     */
     
     // MARK: Get Print Delay 0x04
     // 2 bytes print delay value
