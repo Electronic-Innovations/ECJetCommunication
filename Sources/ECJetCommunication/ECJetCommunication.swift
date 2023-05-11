@@ -210,6 +210,7 @@ public struct Frame: CustomStringConvertible {
             self.command = com
         } else {
             print("Couldn't recognise the command: \(commandProvided)")
+            print(bytes)
             return nil
         }
         
