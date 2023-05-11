@@ -293,11 +293,23 @@ public struct Frame: CustomStringConvertible {
     }
     
     // MARK: Get Print Delay 0x04
-    // 2 bytes print delay value
-    public func decodePrintDelay() -> UInt16 {
+    public func decodePrintDelay() -> Double {
         precondition(self.command == .getPrintDelay)
-        precondition(self.data.count == 2)
-        return UInt16(upper: self.data[0], lower: self.data[1])
+        precondition(self.data.count == 5)
+        let value: Double = (16777.216 * Double(self.data[3])) + (65.536 * Double(self.data[2])) + (0.256 * Double(self.data[1])) + (0.001 * Double(self.data[0]))
+        return value
+    }
+    
+    static public func encodePrintDelay(mm value: Double) -> [UInt8] {
+        let q1 = (value / 16777.216).rounded(.towardZero)
+        let r1 = value.truncatingRemainder(dividingBy: 16777.216)
+        let q2 = (r1 / 65.536).rounded(.towardZero)
+        let r2 = r1.truncatingRemainder(dividingBy: 65.536)
+        let q3 = (r2 / 0.256).rounded(.towardZero)
+        let r3 = r2.truncatingRemainder(dividingBy: 0.256)
+        let q4 = (r3 / 0.001).rounded(.toNearestOrAwayFromZero)
+        //print("\(value),\(q1),\(r),\(q2)")
+        return [UInt8(q4), UInt8(q3), UInt8(q2), UInt8(q1), 1]
     }
     
     // MARK: Trigger Repeat

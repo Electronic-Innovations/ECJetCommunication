@@ -136,6 +136,14 @@ final class ECJetCommunicationTests: XCTestCase {
         XCTAssertEqual(Frame.encodePrintInterval(mm: 17000.03), [94,102,3,1,1])
     }
     
+    func testDecodePrintDelay() throws {
+        XCTAssertEqual(Frame(address: 0, command: .getPrintDelay, data: [216, 71, 3, 0, 1]).decodePrintDelay(), 215.0, accuracy: 0.001)
+    }
+    
+    func testEncodePrintDelay() throws {
+        XCTAssertEqual(Frame.encodePrintDelay(mm: 215.0), [216, 71, 3, 0, 1])
+    }
+    
     func testGetJetStatusPacket() throws {
         let bytes:[UInt8] = [0x7E,0x00,0x14,0x00,0x0C,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xE1,0x0F,0x7F]
         let frame = Frame(address: 0, command: .getJetStatus, information: CommandInformation.fromPC(), data: [], verification: .crc16)
