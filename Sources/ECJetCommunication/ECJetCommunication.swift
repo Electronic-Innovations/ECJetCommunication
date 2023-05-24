@@ -287,7 +287,7 @@ public struct Frame: CustomStringConvertible {
     // This shouldn't accept a Double as all Double values cannot be encoded properly. Not sure how to handle this.
     // Needs to be added to the validation for the UI as well.
     static public func encodePrintWidth(mm value: Double) -> [UInt8] {
-        precondition(value < (256 * 0.256))
+        precondition(value < (256 * 0.256), "encodePrintWidth value (\(value)) is too large")
         let q1 = (value / 0.256).rounded(.towardZero)
         let r = value.truncatingRemainder(dividingBy: 0.256)
         let q2 = (r / 0.001).rounded(.toNearestOrAwayFromZero)
