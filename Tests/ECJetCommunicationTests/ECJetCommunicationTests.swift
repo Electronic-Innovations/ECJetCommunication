@@ -103,14 +103,14 @@ final class ECJetCommunicationTests: XCTestCase {
     }
     
     func testDecodePrintWidth() throws {
-        XCTAssertEqual(Frame(address: 0, command: .getPrintWidth, data: [80,0,1]).decodePrintWidth(), 0.08, accuracy: Double.ulpOfOne)
-        XCTAssertEqual(Frame(address: 0, command: .getPrintWidth, data: [44,1,1]).decodePrintWidth(), 0.3, accuracy: 0.001)
-        XCTAssertEqual(Frame(address: 0, command: .getPrintWidth, data: [248,2,1]).decodePrintWidth(), 0.76, accuracy: 0.001)
-        XCTAssertEqual(Frame(address: 0, command: .getPrintWidth, data: [22,3,1]).decodePrintWidth(), 0.79, accuracy: 0.001)
-        XCTAssertEqual(Frame(address: 0, command: .getPrintWidth, data: [62,3,1]).decodePrintWidth(), 0.83, accuracy: 0.001)
-        XCTAssertEqual(Frame(address: 0, command: .getPrintWidth, data: [102,3,1]).decodePrintWidth(), 0.87, accuracy: 0.001)
-        XCTAssertEqual(Frame(address: 0, command: .getPrintWidth, data: [142,3,1]).decodePrintWidth(), 0.91, accuracy: 0.001)
-        XCTAssertEqual(Frame(address: 0, command: .getPrintWidth, data: [232,253,1]).decodePrintWidth(), 65.0, accuracy: 0.001)
+        XCTAssertEqual(Frame.decodePrintWidth(data: [80,0,1]), 0.08, accuracy: Double.ulpOfOne)
+        XCTAssertEqual(Frame.decodePrintWidth(data: [44,1,1]), 0.3, accuracy: 0.001)
+        XCTAssertEqual(Frame.decodePrintWidth(data: [248,2,1]), 0.76, accuracy: 0.001)
+        XCTAssertEqual(Frame.decodePrintWidth(data: [22,3,1]), 0.79, accuracy: 0.001)
+        XCTAssertEqual(Frame.decodePrintWidth(data: [62,3,1]), 0.83, accuracy: 0.001)
+        XCTAssertEqual(Frame.decodePrintWidth(data: [102,3,1]), 0.87, accuracy: 0.001)
+        XCTAssertEqual(Frame.decodePrintWidth(data: [142,3,1]), 0.91, accuracy: 0.001)
+        XCTAssertEqual(Frame.decodePrintWidth(data: [232,253,1]), 65.0, accuracy: 0.001)
     }
     
     func testEncodePrintWidth() throws {
@@ -125,9 +125,9 @@ final class ECJetCommunicationTests: XCTestCase {
     }
     
     func testDecodePrintInterval() throws {
-        XCTAssertEqual(Frame(address: 0, command: .getPrintInterval, data: [238,132,0,0,1]).decodePrintInterval(), 34.03, accuracy: 0.001)
-        XCTAssertEqual(Frame(address: 0, command: .getPrintInterval, data: [172,17,1,0,1]).decodePrintInterval(), 70.06, accuracy: 0.001)
-        XCTAssertEqual(Frame(address: 0, command: .getPrintInterval, data: [94,102,3,1,1]).decodePrintInterval(), 17000.03, accuracy: 0.001)
+        XCTAssertEqual(Frame.decodePrintInterval(data: [238,132,0,0,1]), 34.03, accuracy: 0.001)
+        XCTAssertEqual(Frame.decodePrintInterval(data: [172,17,1,0,1]), 70.06, accuracy: 0.001)
+        XCTAssertEqual(Frame.decodePrintInterval(data: [94,102,3,1,1]), 17000.03, accuracy: 0.001)
     }
     
     func testEncodePrintInterval() throws {
@@ -137,7 +137,7 @@ final class ECJetCommunicationTests: XCTestCase {
     }
     
     func testDecodePrintDelay() throws {
-        XCTAssertEqual(Frame(address: 0, command: .getPrintDelay, data: [216, 71, 3, 0, 1]).decodePrintDelay(), 215.0, accuracy: 0.001)
+        XCTAssertEqual(Frame.decodePrintDelay(data: [216, 71, 3, 0, 1]), 215.0, accuracy: 0.001)
     }
     
     func testEncodePrintDelay() throws {

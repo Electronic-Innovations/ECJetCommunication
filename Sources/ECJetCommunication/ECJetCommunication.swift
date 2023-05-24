@@ -277,10 +277,9 @@ public struct Frame: CustomStringConvertible {
     
     // MARK: Get Print Width 0x02
     // 2 bytes print width value
-    public func decodePrintWidth() -> Double {
-        precondition(self.command == .setPrintWidth || self.command == .getPrintWidth)
-        precondition(self.data.count == 3) // I don't understand why it needs 3 values?
-        let value: Double = (0.256 * Double(self.data[1])) + (0.001 * Double(self.data[0]))
+    static public func decodePrintWidth(data: [UInt8]) -> Double {
+        precondition(data.count == 3) // I don't understand why it needs 3 values?
+        let value: Double = (0.256 * Double(data[1])) + (0.001 * Double(data[0]))
         return value
     }
     
@@ -296,10 +295,9 @@ public struct Frame: CustomStringConvertible {
     }
     
     // MARK: Get Print Delay 0x04
-    public func decodePrintDelay() -> Double {
-        precondition(self.command == .getPrintDelay)
-        precondition(self.data.count == 5)
-        let value: Double = (16777.216 * Double(self.data[3])) + (65.536 * Double(self.data[2])) + (0.256 * Double(self.data[1])) + (0.001 * Double(self.data[0]))
+    static public func decodePrintDelay(data: [UInt8]) -> Double {
+        precondition(data.count == 5)
+        let value: Double = (16777.216 * Double(data[3])) + (65.536 * Double(data[2])) + (0.256 * Double(data[1])) + (0.001 * Double(data[0]))
         return value
     }
     
@@ -316,17 +314,15 @@ public struct Frame: CustomStringConvertible {
     }
     
     // MARK: Trigger Repeat
-    public func decodeTriggerRepeat() -> UInt8 {
-        precondition(self.command == .getTriggerRepeat)
-        precondition(self.data.count == 1)
-        return UInt8(self.data[0])
+    static public func decodeTriggerRepeat(data: [UInt8]) -> UInt8 {
+        precondition(data.count == 1)
+        return UInt8(data[0])
     }
     
     // MARK: Print Interval
-    public func decodePrintInterval() -> Double {
-        precondition(self.command == .getPrintInterval)
-        precondition(self.data.count == 5)
-        let value: Double = (16777.216 * Double(self.data[3])) + (65.536 * Double(self.data[2])) + (0.256 * Double(self.data[1])) + (0.001 * Double(self.data[0]))
+    static public func decodePrintInterval(data: [UInt8]) -> Double {
+        precondition(data.count == 5)
+        let value: Double = (16777.216 * Double(data[3])) + (65.536 * Double(data[2])) + (0.256 * Double(data[1])) + (0.001 * Double(data[0]))
         return value
     }
     
