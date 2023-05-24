@@ -18,7 +18,7 @@ public enum Command: UInt16 {
     case getPrintWidth = 0x0002
     case setPrintDelay = 0x0003
     case getPrintDelay = 0x0004
-    case setPrintInteval = 0x0005
+    case setPrintInterval = 0x0005
     case getPrintInterval = 0x0006
     case setPrintHeight = 0x0007
     case getPrintHeight = 0x0008
@@ -284,7 +284,10 @@ public struct Frame: CustomStringConvertible {
         return value
     }
     
+    // This shouldn't accept a Double as all Double values cannot be encoded properly. Not sure how to handle this.
+    // Needs to be added to the validation for the UI as well.
     static public func encodePrintWidth(mm value: Double) -> [UInt8] {
+        precondition(value < (256 * 0.256))
         let q1 = (value / 0.256).rounded(.towardZero)
         let r = value.truncatingRemainder(dividingBy: 0.256)
         let q2 = (r / 0.001).rounded(.toNearestOrAwayFromZero)
