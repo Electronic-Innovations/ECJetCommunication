@@ -285,7 +285,8 @@ public struct Frame: CustomStringConvertible {
     
     // This shouldn't accept a Double as all Double values cannot be encoded properly. Not sure how to handle this.
     // Needs to be added to the validation for the UI as well.
-    static public func encodePrintWidth(mm value: Double) -> [UInt8] {
+    static public func encodePrintWidth(mm value: Double) throws -> [UInt8] {
+        if value < 0.0 { throw ValueError.encodingValueError }
         precondition(value < (256 * 0.256), "encodePrintWidth value (\(value)) is too large")
         let q1 = (value / 0.256).rounded(.towardZero)
         let r = value.truncatingRemainder(dividingBy: 0.256)
@@ -301,7 +302,8 @@ public struct Frame: CustomStringConvertible {
         return value
     }
     
-    static public func encodePrintDelay(mm value: Double) -> [UInt8] {
+    static public func encodePrintDelay(mm value: Double) throws -> [UInt8] {
+        if value < 0.0 { throw ValueError.encodingValueError }
         let q1 = (value / 16777.216).rounded(.towardZero)
         let r1 = value.truncatingRemainder(dividingBy: 16777.216)
         let q2 = (r1 / 65.536).rounded(.towardZero)
@@ -326,7 +328,8 @@ public struct Frame: CustomStringConvertible {
         return value
     }
     
-    static public func encodePrintInterval(mm value: Double) -> [UInt8] {
+    static public func encodePrintInterval(mm value: Double) throws -> [UInt8] {
+        if value < 0.0 { throw ValueError.encodingValueError }
         let q1 = (value / 16777.216).rounded(.towardZero)
         let r1 = value.truncatingRemainder(dividingBy: 16777.216)
         let q2 = (r1 / 65.536).rounded(.towardZero)
@@ -587,6 +590,9 @@ public struct Frame: CustomStringConvertible {
      */
 }
 
-
+enum ValueError: Error {
+    case encodingValueError
+    case setTriggerRepeatError
+}
 
 

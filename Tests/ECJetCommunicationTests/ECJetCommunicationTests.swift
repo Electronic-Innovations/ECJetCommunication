@@ -114,14 +114,14 @@ final class ECJetCommunicationTests: XCTestCase {
     }
     
     func testEncodePrintWidth() throws {
-        XCTAssertEqual(Frame.encodePrintWidth(mm: 0.08), [80,0,1])
-        XCTAssertEqual(Frame.encodePrintWidth(mm: 0.3), [44,1,1])
-        XCTAssertEqual(Frame.encodePrintWidth(mm: 0.76), [248,2,1])
-        XCTAssertEqual(Frame.encodePrintWidth(mm: 0.79), [22,3,1])
-        XCTAssertEqual(Frame.encodePrintWidth(mm: 0.83), [62,3,1])
-        XCTAssertEqual(Frame.encodePrintWidth(mm: 0.87), [102,3,1])
-        XCTAssertEqual(Frame.encodePrintWidth(mm: 0.91), [142,3,1])
-        XCTAssertEqual(Frame.encodePrintWidth(mm: 65.0), [232,253,1])
+        XCTAssertEqual(try! Frame.encodePrintWidth(mm: 0.08), [80,0,1])
+        XCTAssertEqual(try! Frame.encodePrintWidth(mm: 0.3), [44,1,1])
+        XCTAssertEqual(try! Frame.encodePrintWidth(mm: 0.76), [248,2,1])
+        XCTAssertEqual(try! Frame.encodePrintWidth(mm: 0.79), [22,3,1])
+        XCTAssertEqual(try! Frame.encodePrintWidth(mm: 0.83), [62,3,1])
+        XCTAssertEqual(try! Frame.encodePrintWidth(mm: 0.87), [102,3,1])
+        XCTAssertEqual(try! Frame.encodePrintWidth(mm: 0.91), [142,3,1])
+        XCTAssertEqual(try! Frame.encodePrintWidth(mm: 65.0), [232,253,1])
     }
     
     func testDecodePrintInterval() throws {
@@ -131,9 +131,10 @@ final class ECJetCommunicationTests: XCTestCase {
     }
     
     func testEncodePrintInterval() throws {
-        XCTAssertEqual(Frame.encodePrintInterval(mm: 34.03), [238,132,0,0,1])
-        XCTAssertEqual(Frame.encodePrintInterval(mm: 70.06), [172,17,1,0,1])
-        XCTAssertEqual(Frame.encodePrintInterval(mm: 17000.03), [94,102,3,1,1])
+        XCTAssertEqual(try! Frame.encodePrintInterval(mm: 34.03), [238,132,0,0,1])
+        XCTAssertEqual(try! Frame.encodePrintInterval(mm: 70.06), [172,17,1,0,1])
+        XCTAssertEqual(try! Frame.encodePrintInterval(mm: 17000.03), [94,102,3,1,1])
+        XCTAssertEqual(try! Frame.encodePrintInterval(mm: 1.0), [232,3,0,0,1])
     }
     
     func testDecodePrintDelay() throws {
@@ -141,7 +142,7 @@ final class ECJetCommunicationTests: XCTestCase {
     }
     
     func testEncodePrintDelay() throws {
-        XCTAssertEqual(Frame.encodePrintDelay(mm: 215.0), [216, 71, 3, 0, 1])
+        XCTAssertEqual(try! Frame.encodePrintDelay(mm: 215.0), [216, 71, 3, 0, 1])
     }
     
     func testGetJetStatusPacket() throws {
