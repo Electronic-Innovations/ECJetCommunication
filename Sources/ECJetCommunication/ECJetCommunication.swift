@@ -292,7 +292,7 @@ public struct Frame: CustomStringConvertible {
         let r = value.truncatingRemainder(dividingBy: 0.256)
         let q2 = (r / 0.001).rounded(.toNearestOrAwayFromZero)
         //print("\(value),\(q1),\(r),\(q2)")
-        return [UInt8(q2), UInt8(q1), 1]
+        return [UInt8(Int(q2) % 256), UInt8(Int(q1) % 256), 1]
     }
     
     // MARK: Get Print Delay 0x04
@@ -312,7 +312,7 @@ public struct Frame: CustomStringConvertible {
         let r3 = r2.truncatingRemainder(dividingBy: 0.256)
         let q4 = (r3 / 0.001).rounded(.toNearestOrAwayFromZero)
         //print("\(value),\(q1),\(r),\(q2)")
-        return [UInt8(q4), UInt8(q3), UInt8(q2), UInt8(q1), 1]
+        return [UInt8(Int(q4) % 256), UInt8(Int(q3) % 256), UInt8(Int(q2) % 256), UInt8(Int(q1) % 256), 1]
     }
     
     // MARK: Trigger Repeat
@@ -337,8 +337,8 @@ public struct Frame: CustomStringConvertible {
         let q3 = (r2 / 0.256).rounded(.towardZero)
         let r3 = r2.truncatingRemainder(dividingBy: 0.256)
         let q4 = (r3 / 0.001).rounded(.toNearestOrAwayFromZero)
-        print("\(value),\(q4),\(q3),\(q2),\(q1)")
-        return [UInt8(q4), UInt8(q3), UInt8(q2), UInt8(q1), 1]
+        //print("\(value),\(q4),\(q3),\(q2),\(q1)")
+        return [UInt8(Int(q4) % 256), UInt8(Int(q3) % 256), UInt8(Int(q2) % 256), UInt8(Int(q1) % 256), 1]
     }
     
     // MARK: Get Print Count 0x0A

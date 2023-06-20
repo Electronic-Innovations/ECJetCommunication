@@ -128,6 +128,10 @@ final class ECJetCommunicationTests: XCTestCase {
         XCTAssertEqual(Frame.decodePrintInterval(data: [238,132,0,0,1]), 34.03, accuracy: 0.001)
         XCTAssertEqual(Frame.decodePrintInterval(data: [172,17,1,0,1]), 70.06, accuracy: 0.001)
         XCTAssertEqual(Frame.decodePrintInterval(data: [94,102,3,1,1]), 17000.03, accuracy: 0.001)
+        XCTAssertEqual(Frame.decodePrintInterval(data: [255,0,0,0,1]), 0.255, accuracy: 0.001)
+        XCTAssertEqual(Frame.decodePrintInterval(data: [0,1,0,0,1]), 0.256, accuracy: 0.001)
+        XCTAssertEqual(Frame.decodePrintInterval(data: [255,74,0,0,1]), 19.198, accuracy: 0.001)
+        XCTAssertEqual(Frame.decodePrintInterval(data: [0,75,0,0,1]), 19.2, accuracy: 0.001)
     }
     
     func testEncodePrintInterval() throws {
@@ -135,6 +139,11 @@ final class ECJetCommunicationTests: XCTestCase {
         XCTAssertEqual(try! Frame.encodePrintInterval(mm: 70.06), [172,17,1,0,1])
         XCTAssertEqual(try! Frame.encodePrintInterval(mm: 17000.03), [94,102,3,1,1])
         XCTAssertEqual(try! Frame.encodePrintInterval(mm: 1.0), [232,3,0,0,1])
+    }
+    
+    func testEncodePrintIntervalUInt8Overflow() throws {
+        // This test highlights a bug with r2.truncatingRemainder(dividingBy: 0.256) for 19.2
+        XCTAssertEqual(try! Frame.encodePrintInterval(mm: 19.2), [0,75,0,0,1])
     }
     
     func testDecodePrintDelay() throws {
