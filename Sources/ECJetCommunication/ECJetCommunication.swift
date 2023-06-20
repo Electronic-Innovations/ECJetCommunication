@@ -337,7 +337,7 @@ public struct Frame: CustomStringConvertible {
         let q3 = (r2 / 0.256).rounded(.towardZero)
         let r3 = r2.truncatingRemainder(dividingBy: 0.256)
         let q4 = (r3 / 0.001).rounded(.toNearestOrAwayFromZero)
-        //print("\(value),\(q1),\(r),\(q2)")
+        print("\(value),\(q4),\(q3),\(q2),\(q1)")
         return [UInt8(q4), UInt8(q3), UInt8(q2), UInt8(q1), 1]
     }
     
