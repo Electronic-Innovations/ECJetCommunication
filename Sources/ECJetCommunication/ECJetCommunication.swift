@@ -315,19 +315,15 @@ public struct Frame: CustomStringConvertible {
         return [UInt8(Int(q4) % 256), UInt8(Int(q3) % 256), UInt8(Int(q2) % 256), UInt8(Int(q1) % 256), 1]
     }
     
-    // MARK: Trigger Repeat
-    static public func decodeTriggerRepeat(data: [UInt8]) -> UInt8 {
-        precondition(data.count == 1)
-        return UInt8(data[0])
-    }
-    
-    // MARK: Print Interval
+    // MARK: Get Print Interval 0x06
     static public func decodePrintInterval(data: [UInt8]) -> Double {
         precondition(data.count == 5)
         let value: Double = (16777.216 * Double(data[3])) + (65.536 * Double(data[2])) + (0.256 * Double(data[1])) + (0.001 * Double(data[0]))
         return value
     }
     
+    // remainder vs truncating remainder
+    // https://stackoverflow.com/questions/42724234/truncatingremainder-vs-remainder-in-swift
     static public func encodePrintInterval(mm value: Double) throws -> [UInt8] {
         if value < 0.0 { throw ValueError.encodingValueError }
         let q1 = (value / 16777.216).rounded(.towardZero)
@@ -341,6 +337,8 @@ public struct Frame: CustomStringConvertible {
         return [UInt8(Int(q4) % 256), UInt8(Int(q3) % 256), UInt8(Int(q2) % 256), UInt8(Int(q1) % 256), 1]
     }
     
+    // MARK: Get Print Height 0x08
+    
     // MARK: Get Print Count 0x0A
     public static func decodePrintCount(_ data: [UInt8]) -> Int {
         precondition(data.count == 4, "Wrong number of bytes when decoding print count")
@@ -350,7 +348,7 @@ public struct Frame: CustomStringConvertible {
     public static func getPrintCount(address: UInt8 = 0, countType: CountType, verification: VerificationMode = .crc16) -> Frame {
         return Frame(address: address, command: .getPrintCount, data: [countType.rawValue], verification: verification)
     }
-    
+
     // MARK: Set Reverse Message 0x0B
     public struct ReverseSettings: Equatable {
         let horizontal: Bool
@@ -371,18 +369,19 @@ public struct Frame: CustomStringConvertible {
         return ReverseSettings(horizontal: data[0] == 1 ? true : false, vertical: data[1] == 1 ? true : false)
     }
     
-    public static func decodeDownloadRemoteBuffer(_ data: [UInt8]) -> String? {
-        switch data.count {
-        case 2:
-            return ""
-        case 0, 1:
-            return nil
-        default:
-            //let count = UInt16(upper: data[1], lower: data[0])
-            let bytes = [UInt8](data.dropFirst(2))
-            return String(bytes: bytes, encoding: .utf8)
-        }
+    // MARK: Get Trigger Repeat 0x0E
+    static public func decodeTriggerRepeat(data: [UInt8]) -> UInt8 {
+        precondition(data.count == 1)
+        return UInt8(data[0])
     }
+    
+    // MARK: Get Printer Status 0x0F
+    // MARK: Get Print Head Code 0x11
+    // MARK: Get Photocell Mode 0x13
+    // MARK: Get Jet Status 0x14
+    // MARK: Get System Times 0x15
+    
+    // MARK: Get Date Time 0x1C
     
     // MARK: Get Font List 0x1D
     // [FontCount] 1 byte Number of fonts
@@ -433,6 +432,26 @@ public struct Frame: CustomStringConvertible {
         
         return messageList
     }
+    
+    
+    // MARK: Download Remote Buffer 0x20
+    public static func decodeDownloadRemoteBuffer(_ data: [UInt8]) -> String? {
+        switch data.count {
+        case 2:
+            return ""
+        case 0, 1:
+            return nil
+        default:
+            //let count = UInt16(upper: data[1], lower: data[0])
+            let bytes = [UInt8](data.dropFirst(2))
+            return String(bytes: bytes, encoding: .utf8)
+        }
+    }
+    
+    // MARK: Get AUX Mode 0x25
+    // MARK: Get Shaft Encoder Mode 0x27
+    // MARK: Get Reference Modulation 0x29
+    
     
     // MARK: - Print Out Methods
     public var description: String {
@@ -593,6 +612,43 @@ public struct Frame: CustomStringConvertible {
 enum ValueError: Error {
     case encodingValueError
     case setTriggerRepeatError
+}
+
+// https://oleb.net/blog/2018/03/making-illegal-states-unrepresentable/
+
+typealias ThreeUInt8 = (UInt8, UInt8, UInt8)
+
+struct PrintWidth {
+    // MARK: Get Print Width 0x02
+    // 2 bytes print width value
+    
+    private let data: (UInt8, UInt8, UInt8)
+    
+    var bytes: (UInt8, UInt8, UInt8) {
+        get {
+            return data
+        }
+    }
+    
+    var mm: Double {
+        return (0.256 * Double(data.1)) + (0.001 * Double(data.0))
+    }
+    
+    init(bytes: (UInt8, UInt8, UInt8)) {
+        // Needs to only accept three bytes
+        self.data = bytes
+    }
+    
+    init(mm value: Double) throws {
+        if value < 0.0 { throw ValueError.encodingValueError }
+        precondition(value < (256 * 0.256), "encodePrintWidth value (\(value)) is too large")
+        let q1 = (value / 0.256).rounded(.towardZero)
+        let r = value.truncatingRemainder(dividingBy: 0.256)
+        let q2 = (r / 0.001).rounded(.toNearestOrAwayFromZero)
+        //print("\(value),\(q1),\(r),\(q2)")
+        //self.data = [UInt8(Int(q2) % 256), UInt8(Int(q1) % 256), 1]
+        self.data = (UInt8(Int(q2) % 256), UInt8(Int(q1) % 256), 1)
+    }
 }
 
 

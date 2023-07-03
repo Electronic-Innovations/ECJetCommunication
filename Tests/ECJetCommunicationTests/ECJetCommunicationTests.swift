@@ -169,6 +169,12 @@ final class ECJetCommunicationTests: XCTestCase {
         XCTAssertEqual(frame.data, [0xAA,0xAA,0x00,0xAE,0x83,0x0C,0x59,0x52,0x00,0x00])
     }
     
+    func testStartJetPacket() throws {
+        let frame = Frame(command: .startJet)
+        let bytes: [UInt8] = [0x7E,0x00,0x16,0x00,0x0C,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xC3,0xA4,0x7F]
+        XCTAssertEqual(bytes, frame.bytes)
+    }
+    
     func testStartPrintPacket() throws {
         let bytes:[UInt8] = [0x7E,0x00,0x18,0x00,0x0C,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x1E,0xED,0x7F]
         let frame = Frame(address: 0, command: .startPrint, information: CommandInformation.fromPC(), data: [], verification: .crc16)
@@ -277,6 +283,32 @@ final class ECJetCommunicationTests: XCTestCase {
         let frame3 = Frame(address: 0, command:.setTriggerRepeat, data: [0x7F])
         XCTAssertEqual(frame3.bytes, [0x7E,0x00,0x0D,0x00,0x0C,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x7D,0x5F,0xE1,0x17,0x7F])
     }
-
+    
+    func testPrintWidthStruct() throws {
+        XCTAssertEqual(PrintWidth(bytes: (80,0,1)).mm, 0.08, accuracy: Double.ulpOfOne)
+        XCTAssertEqual(PrintWidth(bytes: (44,1,1)).mm, 0.3, accuracy: 0.001)
+        XCTAssertEqual(PrintWidth(bytes: (248,2,1)).mm, 0.76, accuracy: 0.001)
+        XCTAssertEqual(PrintWidth(bytes: (22,3,1)).mm, 0.79, accuracy: 0.001)
+        XCTAssertEqual(PrintWidth(bytes: (62,3,1)).mm, 0.83, accuracy: 0.001)
+        XCTAssertEqual(PrintWidth(bytes: (102,3,1)).mm, 0.87, accuracy: 0.001)
+        XCTAssertEqual(PrintWidth(bytes: (142,3,1)).mm, 0.91, accuracy: 0.001)
+        XCTAssertEqual(PrintWidth(bytes: (232,253,1)).mm, 65.0, accuracy: 0.001)
+        
+        // Commented out becaused Tuples aren't able to be made Equatable
+        //XCTAssertEqual(try! PrintWidth(mm: 0.08).bytes, (80,0,1))
+        //XCTAssertEqual(try! PrintWidth(mm: 0.3).bytes, (44,1,1))
+        //XCTAssertEqual(try! PrintWidth(mm: 0.76).bytes, (248,2,1))
+        //XCTAssertEqual(try! PrintWidth(mm: 0.79).bytes, (22,3,1))
+        //XCTAssertEqual(try! PrintWidth(mm: 0.83).bytes, (62,3,1))
+        //XCTAssertEqual(try! PrintWidth(mm: 0.87).bytes, (102,3,1))
+        //XCTAssertEqual(try! PrintWidth(mm: 0.91).bytes, (142,3,1))
+        //XCTAssertEqual(try! PrintWidth(mm: 65.0).bytes, (232,253,1))
+        
+        let a = try! PrintWidth(mm: 0.08).bytes
+        XCTAssertEqual(a.0, 80)
+        XCTAssertEqual(a.1, 0)
+        XCTAssertEqual(a.2, 1)
+        
+    }
 
 }
