@@ -612,6 +612,7 @@ public struct Frame: CustomStringConvertible {
 enum ValueError: Error {
     case encodingValueError
     case setTriggerRepeatError
+    case incorrectNumberOfBytesError
 }
 
 // https://oleb.net/blog/2018/03/making-illegal-states-unrepresentable/
@@ -624,19 +625,18 @@ struct PrintWidth {
     
     private let data: (UInt8, UInt8, UInt8)
     
-    var bytes: (UInt8, UInt8, UInt8) {
-        get {
-            return data
-        }
+    var tuple: (UInt8, UInt8, UInt8) { return data }
+    var bytes: [UInt8] { return [data.0, data.1, data.2] }
+    var mm: Double { return (0.256 * Double(data.1)) + (0.001 * Double(data.0)) }
+    
+    init(bytes: [UInt8]) throws {
+        if bytes.count != 3 { throw ValueError.incorrectNumberOfBytesError }
+        self.data = (bytes[0], bytes[1], bytes[2])
     }
     
-    var mm: Double {
-        return (0.256 * Double(data.1)) + (0.001 * Double(data.0))
-    }
-    
-    init(bytes: (UInt8, UInt8, UInt8)) {
+    init(tuple: (UInt8, UInt8, UInt8)) {
         // Needs to only accept three bytes
-        self.data = bytes
+        self.data = tuple
     }
     
     init(mm value: Double) throws {

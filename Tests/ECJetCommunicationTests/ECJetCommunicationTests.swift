@@ -285,26 +285,35 @@ final class ECJetCommunicationTests: XCTestCase {
     }
     
     func testPrintWidthStruct() throws {
-        XCTAssertEqual(PrintWidth(bytes: (80,0,1)).mm, 0.08, accuracy: Double.ulpOfOne)
-        XCTAssertEqual(PrintWidth(bytes: (44,1,1)).mm, 0.3, accuracy: 0.001)
-        XCTAssertEqual(PrintWidth(bytes: (248,2,1)).mm, 0.76, accuracy: 0.001)
-        XCTAssertEqual(PrintWidth(bytes: (22,3,1)).mm, 0.79, accuracy: 0.001)
-        XCTAssertEqual(PrintWidth(bytes: (62,3,1)).mm, 0.83, accuracy: 0.001)
-        XCTAssertEqual(PrintWidth(bytes: (102,3,1)).mm, 0.87, accuracy: 0.001)
-        XCTAssertEqual(PrintWidth(bytes: (142,3,1)).mm, 0.91, accuracy: 0.001)
-        XCTAssertEqual(PrintWidth(bytes: (232,253,1)).mm, 65.0, accuracy: 0.001)
+        XCTAssertEqual(PrintWidth(tuple: (80,0,1)).mm, 0.08, accuracy: Double.ulpOfOne)
+        XCTAssertEqual(PrintWidth(tuple: (44,1,1)).mm, 0.3, accuracy: 0.001)
+        XCTAssertEqual(PrintWidth(tuple: (248,2,1)).mm, 0.76, accuracy: 0.001)
+        XCTAssertEqual(PrintWidth(tuple: (22,3,1)).mm, 0.79, accuracy: 0.001)
+        XCTAssertEqual(PrintWidth(tuple: (62,3,1)).mm, 0.83, accuracy: 0.001)
+        XCTAssertEqual(PrintWidth(tuple: (102,3,1)).mm, 0.87, accuracy: 0.001)
+        XCTAssertEqual(PrintWidth(tuple: (142,3,1)).mm, 0.91, accuracy: 0.001)
+        XCTAssertEqual(PrintWidth(tuple: (232,253,1)).mm, 65.0, accuracy: 0.001)
         
-        // Commented out becaused Tuples aren't able to be made Equatable
-        //XCTAssertEqual(try! PrintWidth(mm: 0.08).bytes, (80,0,1))
-        //XCTAssertEqual(try! PrintWidth(mm: 0.3).bytes, (44,1,1))
-        //XCTAssertEqual(try! PrintWidth(mm: 0.76).bytes, (248,2,1))
-        //XCTAssertEqual(try! PrintWidth(mm: 0.79).bytes, (22,3,1))
-        //XCTAssertEqual(try! PrintWidth(mm: 0.83).bytes, (62,3,1))
-        //XCTAssertEqual(try! PrintWidth(mm: 0.87).bytes, (102,3,1))
-        //XCTAssertEqual(try! PrintWidth(mm: 0.91).bytes, (142,3,1))
-        //XCTAssertEqual(try! PrintWidth(mm: 65.0).bytes, (232,253,1))
+        XCTAssertEqual(try! PrintWidth(bytes: [232,253,1]).mm, 65.0, accuracy: 0.001)
         
-        let a = try! PrintWidth(mm: 0.08).bytes
+        XCTAssertThrowsError(try PrintWidth(bytes: [232,253,1,0])) { error in
+            XCTAssertEqual(error as! ValueError, ValueError.incorrectNumberOfBytesError)
+        }
+        XCTAssertThrowsError(try PrintWidth(bytes: [232,253])) { error in
+            XCTAssertEqual(error as! ValueError, ValueError.incorrectNumberOfBytesError)
+        }
+        
+        // Commented out becaused Tuples aren't Equatable
+        XCTAssertEqual(try! PrintWidth(mm: 0.08).bytes, [80,0,1])
+        XCTAssertEqual(try! PrintWidth(mm: 0.3).bytes, [44,1,1])
+        XCTAssertEqual(try! PrintWidth(mm: 0.76).bytes, [248,2,1])
+        XCTAssertEqual(try! PrintWidth(mm: 0.79).bytes, [22,3,1])
+        XCTAssertEqual(try! PrintWidth(mm: 0.83).bytes, [62,3,1])
+        XCTAssertEqual(try! PrintWidth(mm: 0.87).bytes, [102,3,1])
+        XCTAssertEqual(try! PrintWidth(mm: 0.91).bytes, [142,3,1])
+        XCTAssertEqual(try! PrintWidth(mm: 65.0).bytes, [232,253,1])
+        
+        let a = try! PrintWidth(mm: 0.08).tuple
         XCTAssertEqual(a.0, 80)
         XCTAssertEqual(a.1, 0)
         XCTAssertEqual(a.2, 1)
