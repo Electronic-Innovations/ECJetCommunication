@@ -239,6 +239,24 @@ public struct Frame: CustomStringConvertible {
         
         self.verification = verificationMethod
     }
+    /* Needs a BigInt implementation to be useful. Never checked that this worked.
+    public init?(integer value: Int, verificationMethod: VerificationMode) {
+        //let x: Int = 2019
+        let length: Int = 2 * MemoryLayout<UInt8>.size
+
+        let a = withUnsafeBytes(of: value) { bytes in
+            Array(bytes.prefix(length))
+        }
+
+        let result = Array(a.reversed())
+        
+        if let frame = Frame(bytes: result, verificationMethod: verificationMethod) {
+            self = frame
+        } else {
+            return nil
+        }
+    }
+     */
     
     public init(address: UInt8 = 0, command: Command, information: CommandInformation = CommandInformation.fromPC(), dataOffset: UInt16 = 0x0C, data: [UInt8] = [], verification: VerificationMode = .crc16) {
         self.address = address
@@ -467,7 +485,13 @@ public struct Frame: CustomStringConvertible {
         output.append("\(self.address),")
         output.append("\(self.command),")
         output.append("\(self.information.prettyDescription),")
-        output.append("\(self.data)]")
+        switch self.command {
+        case .setPrintWidth, .getPrintWidth:
+            let pw = try! PrintWidth(bytes: self.data)
+            output.append("\(pw)")
+        default:
+            output.append("\(self.data)]")
+        }
         return output
     }
     
@@ -619,7 +643,11 @@ enum ValueError: Error {
 
 typealias ThreeUInt8 = (UInt8, UInt8, UInt8)
 
-struct PrintWidth {
+struct PrintWidth: CustomStringConvertible {
+    var description: String {
+        return "\(String(format: "%.2f", self.mm))mm"
+    }
+            
     // MARK: Get Print Width 0x02
     // 2 bytes print width value
     

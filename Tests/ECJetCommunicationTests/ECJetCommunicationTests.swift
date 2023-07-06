@@ -296,6 +296,7 @@ final class ECJetCommunicationTests: XCTestCase {
         
         XCTAssertEqual(try! PrintWidth(bytes: [232,253,1]).mm, 65.0, accuracy: 0.001)
         
+        // https://stackoverflow.com/questions/32860338/how-to-unit-test-throwing-functions-in-swift
         XCTAssertThrowsError(try PrintWidth(bytes: [232,253,1,0])) { error in
             XCTAssertEqual(error as! ValueError, ValueError.incorrectNumberOfBytesError)
         }
@@ -318,6 +319,11 @@ final class ECJetCommunicationTests: XCTestCase {
         XCTAssertEqual(a.1, 0)
         XCTAssertEqual(a.2, 1)
         
+    }
+    
+    func testPreconditionFailure() throws {
+        // 0x7e0001000c0000000000000000f40101f9aa7f
+        let frame = Frame(bytes: [0x7e,0x00,0x01,0x00,0x0c,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xf4,0x01,0x01,0xf9,0xaa,0x7f], verificationMethod: .crc16)
     }
 
 }
