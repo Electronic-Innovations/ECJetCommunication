@@ -643,31 +643,31 @@ enum ValueError: Error {
 
 typealias ThreeUInt8 = (UInt8, UInt8, UInt8)
 
-struct PrintWidth: CustomStringConvertible {
+public struct PrintWidth: CustomStringConvertible {
     // MARK: Get Print Width 0x02
     // 3 bytes print width value
     
     private let data: (UInt8, UInt8, UInt8)
     
-    var tuple: (UInt8, UInt8, UInt8) { return data }
-    var bytes: [UInt8] { return [data.0, data.1, data.2] }
-    var mm: Double { return (0.256 * Double(data.1)) + (0.001 * Double(data.0)) }
+    public var tuple: (UInt8, UInt8, UInt8) { return data }
+    public var bytes: [UInt8] { return [data.0, data.1, data.2] }
+    public var mm: Double { return (0.256 * Double(data.1)) + (0.001 * Double(data.0)) }
     
-    var description: String {
+    public var description: String {
         return "\(String(format: "%.2f", self.mm))mm"
     }
     
-    init(bytes: [UInt8]) throws {
+    public init(bytes: [UInt8]) throws {
         if bytes.count != 3 { throw ValueError.incorrectNumberOfBytesError }
         self.data = (bytes[0], bytes[1], bytes[2])
     }
     
-    init(tuple: (UInt8, UInt8, UInt8)) {
+    public init(tuple: (UInt8, UInt8, UInt8)) {
         // Needs to only accept three bytes
         self.data = tuple
     }
     
-    init(mm value: Double) throws {
+    public init(mm value: Double) throws {
         if value < 0.0 { throw ValueError.encodingValueError }
         precondition(value < (256 * 0.256), "encodePrintWidth value (\(value)) is too large")
         let q1 = (value / 0.256).rounded(.towardZero)
@@ -679,12 +679,12 @@ struct PrintWidth: CustomStringConvertible {
     }
 }
 
-struct PrintDelay: CustomStringConvertible {
+public struct PrintDelay: CustomStringConvertible {
     // MARK: Get Print Delay 0x04
     private let data: (UInt8, UInt8, UInt8, UInt8, UInt8)
     
-    var bytes: [UInt8] { return [data.0, data.1, data.2, data.3, data.4] }
-    var mm: Double {
+    public var bytes: [UInt8] { return [data.0, data.1, data.2, data.3, data.4] }
+    public var mm: Double {
         let value: Double = (16777.216 * Double(self.data.3))
                              + (65.536 * Double(self.data.2))
                               + (0.256 * Double(self.data.1))
@@ -692,16 +692,16 @@ struct PrintDelay: CustomStringConvertible {
         return value
     }
     
-    var description: String {
+    public var description: String {
         return "\(String(format: "%.2f", self.mm))mm"
     }
     
-    init(bytes: [UInt8]) throws {
+    public init(bytes: [UInt8]) throws {
         if bytes.count != 5 { throw ValueError.incorrectNumberOfBytesError }
         self.data = (bytes[0], bytes[1], bytes[2], bytes[3], bytes[4])
     }
     
-    init(mm value: Double) throws {
+    public init(mm value: Double) throws {
         if value < 0.0 { throw ValueError.encodingValueError }
         let q1 = (value / 16777.216).rounded(.towardZero)
         let r1 = value.truncatingRemainder(dividingBy: 16777.216)
