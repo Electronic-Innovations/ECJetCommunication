@@ -487,8 +487,8 @@ public struct Frame: CustomStringConvertible {
         output.append("\(self.information.prettyDescription),")
         switch self.command {
         case .setPrintWidth, .getPrintWidth:
-            let pw = try! PrintWidth(bytes: self.data)
-            output.append("\(pw)")
+            let width = try? PrintWidth(bytes: self.data)
+            output.append("\(width?.description ?? self.data.description)")
         default:
             output.append("\(self.data)]")
         }
@@ -644,18 +644,18 @@ enum ValueError: Error {
 typealias ThreeUInt8 = (UInt8, UInt8, UInt8)
 
 struct PrintWidth: CustomStringConvertible {
-    var description: String {
-        return "\(String(format: "%.2f", self.mm))mm"
-    }
-            
     // MARK: Get Print Width 0x02
-    // 2 bytes print width value
+    // 3 bytes print width value
     
     private let data: (UInt8, UInt8, UInt8)
     
     var tuple: (UInt8, UInt8, UInt8) { return data }
     var bytes: [UInt8] { return [data.0, data.1, data.2] }
     var mm: Double { return (0.256 * Double(data.1)) + (0.001 * Double(data.0)) }
+    
+    var description: String {
+        return "\(String(format: "%.2f", self.mm))mm"
+    }
     
     init(bytes: [UInt8]) throws {
         if bytes.count != 3 { throw ValueError.incorrectNumberOfBytesError }
@@ -679,4 +679,37 @@ struct PrintWidth: CustomStringConvertible {
     }
 }
 
-
+struct PrintDelay: CustomStringConvertible {
+    // MARK: Get Print Delay 0x04
+    private let data: (UInt8, UInt8, UInt8, UInt8, UInt8)
+    
+    var bytes: [UInt8] { return [data.0, data.1, data.2, data.3, data.4] }
+    var mm: Double {
+        let value: Double = (16777.216 * Double(self.data.3))
+                             + (65.536 * Double(self.data.2))
+                              + (0.256 * Double(self.data.1))
+                              + (0.001 * Double(self.data.0))
+        return value
+    }
+    
+    var description: String {
+        return "\(String(format: "%.2f", self.mm))mm"
+    }
+    
+    init(bytes: [UInt8]) throws {
+        if bytes.count != 5 { throw ValueError.incorrectNumberOfBytesError }
+        self.data = (bytes[0], bytes[1], bytes[2], bytes[3], bytes[4])
+    }
+    
+    init(mm value: Double) throws {
+        if value < 0.0 { throw ValueError.encodingValueError }
+        let q1 = (value / 16777.216).rounded(.towardZero)
+        let r1 = value.truncatingRemainder(dividingBy: 16777.216)
+        let q2 = (r1 / 65.536).rounded(.towardZero)
+        let r2 = r1.truncatingRemainder(dividingBy: 65.536)
+        let q3 = (r2 / 0.256).rounded(.towardZero)
+        let r3 = r2.truncatingRemainder(dividingBy: 0.256)
+        let q4 = (r3 / 0.001).rounded(.toNearestOrAwayFromZero)
+        self.data = (UInt8(Int(q4) % 256), UInt8(Int(q3) % 256), UInt8(Int(q2) % 256), UInt8(Int(q1) % 256), 1)
+    }
+}

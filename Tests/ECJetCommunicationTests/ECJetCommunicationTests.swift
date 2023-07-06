@@ -148,10 +148,12 @@ final class ECJetCommunicationTests: XCTestCase {
     
     func testDecodePrintDelay() throws {
         XCTAssertEqual(Frame.decodePrintDelay(data: [216, 71, 3, 0, 1]), 215.0, accuracy: 0.001)
+        XCTAssertEqual(try! PrintDelay(bytes: [216, 71, 3, 0, 1]).mm, 215.0, accuracy: 0.001)
     }
     
     func testEncodePrintDelay() throws {
         XCTAssertEqual(try! Frame.encodePrintDelay(mm: 215.0), [216, 71, 3, 0, 1])
+        XCTAssertEqual(try! PrintDelay(mm: 215.0).bytes, [216, 71, 3, 0, 1])
     }
     
     func testGetJetStatusPacket() throws {
