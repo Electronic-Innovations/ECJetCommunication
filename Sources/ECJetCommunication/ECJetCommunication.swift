@@ -239,7 +239,8 @@ public struct Frame: CustomStringConvertible {
         
         self.verification = verificationMethod
     }
-    /* Needs a BigInt implementation to be useful. Never checked that this worked.
+    /*
+     Needs a BigInt implementation to be useful. Never checked that this worked.
     public init?(integer value: Int, verificationMethod: VerificationMode) {
         //let x: Int = 2019
         let length: Int = 2 * MemoryLayout<UInt8>.size
@@ -256,6 +257,17 @@ public struct Frame: CustomStringConvertible {
             return nil
         }
     }
+     */
+    
+     // TODO: -
+    /*
+     
+     public init?(_ input: String, verificationMethod: VerificationMode) {
+        // Swift sometimes outputs data arrays in the format, 0xf400ac7b890d.
+        // This is a very large integer number so it can't be used by default.
+        // Treating it as a string would be a convenient way of taking output
+        // from the console and entering it into test programs.
+     }
      */
     
     public init(address: UInt8 = 0, command: Command, information: CommandInformation = CommandInformation.fromPC(), dataOffset: UInt16 = 0x0C, data: [UInt8] = [], verification: VerificationMode = .crc16) {
@@ -490,8 +502,9 @@ public struct Frame: CustomStringConvertible {
             let width = try? PrintWidth(bytes: self.data)
             output.append("\(width?.description ?? self.data.description)")
         default:
-            output.append("\(self.data)]")
+            output.append("\(self.data)")
         }
+        output.append("]")
         return output
     }
     
@@ -633,83 +646,3 @@ public struct Frame: CustomStringConvertible {
      */
 }
 
-enum ValueError: Error {
-    case encodingValueError
-    case setTriggerRepeatError
-    case incorrectNumberOfBytesError
-}
-
-// https://oleb.net/blog/2018/03/making-illegal-states-unrepresentable/
-
-typealias ThreeUInt8 = (UInt8, UInt8, UInt8)
-
-public struct PrintWidth: CustomStringConvertible {
-    // MARK: Get Print Width 0x02
-    // 3 bytes print width value
-    
-    private let data: (UInt8, UInt8, UInt8)
-    
-    public var tuple: (UInt8, UInt8, UInt8) { return data }
-    public var bytes: [UInt8] { return [data.0, data.1, data.2] }
-    public var mm: Double { return (0.256 * Double(data.1)) + (0.001 * Double(data.0)) }
-    
-    public var description: String {
-        return "\(String(format: "%.2f", self.mm))mm"
-    }
-    
-    public init(bytes: [UInt8]) throws {
-        if bytes.count != 3 { throw ValueError.incorrectNumberOfBytesError }
-        self.data = (bytes[0], bytes[1], bytes[2])
-    }
-    
-    public init(tuple: (UInt8, UInt8, UInt8)) {
-        // Needs to only accept three bytes
-        self.data = tuple
-    }
-    
-    public init(mm value: Double) throws {
-        if value < 0.0 { throw ValueError.encodingValueError }
-        precondition(value < (256 * 0.256), "encodePrintWidth value (\(value)) is too large")
-        let q1 = (value / 0.256).rounded(.towardZero)
-        let r = value.truncatingRemainder(dividingBy: 0.256)
-        let q2 = (r / 0.001).rounded(.toNearestOrAwayFromZero)
-        //print("\(value),\(q1),\(r),\(q2)")
-        //self.data = [UInt8(Int(q2) % 256), UInt8(Int(q1) % 256), 1]
-        self.data = (UInt8(Int(q2) % 256), UInt8(Int(q1) % 256), 1)
-    }
-}
-
-public struct PrintDelay: CustomStringConvertible {
-    // MARK: Get Print Delay 0x04
-    private let data: (UInt8, UInt8, UInt8, UInt8, UInt8)
-    
-    public var bytes: [UInt8] { return [data.0, data.1, data.2, data.3, data.4] }
-    public var mm: Double {
-        let value: Double = (16777.216 * Double(self.data.3))
-                             + (65.536 * Double(self.data.2))
-                              + (0.256 * Double(self.data.1))
-                              + (0.001 * Double(self.data.0))
-        return value
-    }
-    
-    public var description: String {
-        return "\(String(format: "%.2f", self.mm))mm"
-    }
-    
-    public init(bytes: [UInt8]) throws {
-        if bytes.count != 5 { throw ValueError.incorrectNumberOfBytesError }
-        self.data = (bytes[0], bytes[1], bytes[2], bytes[3], bytes[4])
-    }
-    
-    public init(mm value: Double) throws {
-        if value < 0.0 { throw ValueError.encodingValueError }
-        let q1 = (value / 16777.216).rounded(.towardZero)
-        let r1 = value.truncatingRemainder(dividingBy: 16777.216)
-        let q2 = (r1 / 65.536).rounded(.towardZero)
-        let r2 = r1.truncatingRemainder(dividingBy: 65.536)
-        let q3 = (r2 / 0.256).rounded(.towardZero)
-        let r3 = r2.truncatingRemainder(dividingBy: 0.256)
-        let q4 = (r3 / 0.001).rounded(.toNearestOrAwayFromZero)
-        self.data = (UInt8(Int(q4) % 256), UInt8(Int(q3) % 256), UInt8(Int(q2) % 256), UInt8(Int(q1) % 256), 1)
-    }
-}
