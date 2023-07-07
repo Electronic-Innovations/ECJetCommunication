@@ -89,3 +89,8 @@ extension String {
         self = self.whitespaceCondenced()
     }
 }
+
+//https://stackoverflow.com/questions/29835242/whats-the-simplest-way-to-convert-from-a-single-character-string-to-an-ascii-va
+extension StringProtocol {
+    var asciiValues: [UInt8] { compactMap(\.asciiValue) }
+}

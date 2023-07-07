@@ -232,41 +232,183 @@ public struct ReverseMessage: Equatable, CustomStringConvertible {
     }
 }
 
+// MARK: Get Trigger Repeat 0x0E
+// 1 byte Trigger repetition number (minimum 1)
+public struct TriggerRepeat: CustomStringConvertible {
+    public let count: UInt8
+    public var bytes: [UInt8] { return [count] }
+    public var description: String { return "\(count)" }
+    
+    public init(bytes: [UInt8]) throws {
+        if bytes.count != 1 { throw ValueError.incorrectNumberOfBytesError }
+        if bytes[0] < 1 { throw ValueError.encodingValueError }
+        self.count = bytes[0]
+    }
+}
+
+// MARK: Get Printer Status 0x0F
+// The 5-byte data structure is as follows:
+// [Working Status] 1 byte
+//      - 1 jet stop
+//      - 2 jet start
+//      - 4 printing
+// [Warning Status] 4 bytes Warning message
+// 4 bytes total 32 bits, from 0 to 31 bits for warning messages 3.00 to 3.31 respectively
+// For example,
+// - 0001h means there is a warning message 3.00
+// - 0002h indicates that there is a warning message 3.01
+// - 0003h indicates that there are warning messages 3.00 and 3.01
+
+public struct PrinterStatus: CustomStringConvertible {
+    
+    public enum WorkingStatus: UInt8 {
+        case jetStop = 1
+        case jetStart = 2
+        case printing = 4
+        
+        func description() -> String {
+            switch self {
+            case .jetStop:
+                return "Jet Stopped"
+            case .jetStart:
+                return "Jet Started"
+            case .printing:
+                return "Printing"
+            }
+        }
+    }
+    public let status: WorkingStatus
+    public let warningStatus: UInt32
+    
+    public var description: String { return "\(self.status.description()), \(warningStatus)" } // TODO: warningStatus in human readable form.
+    
+    public init(bytes: [UInt8]) throws {
+        if bytes.count != 5 { throw ValueError.incorrectNumberOfBytesError }
+        if let status = WorkingStatus(rawValue: UInt8(bytes[0])) {
+            self.status = status
+            self.warningStatus = UInt32(bytes[1])
+            + (UInt32(bytes[2]) << 8)
+            + (UInt32(bytes[3]) << 16)
+            + (UInt32(bytes[4]) << 24)
+        } else {
+            throw ValueError.encodingValueError
+        }
+    }
+    
+    public init(status: WorkingStatus, bytes: [UInt8]) throws {
+        if bytes.count != 4 { throw ValueError.incorrectNumberOfBytesError }
+        self.warningStatus = UInt32(bytes[0])
+        + (UInt32(bytes[1]) << 8)
+        + (UInt32(bytes[2]) << 16)
+        + (UInt32(bytes[3]) << 24)
+        self.status = status
+    }
+}
+
+// MARK: Get Print Head Code 0x11
+// 14 bytes print head code ASCII value For example, the print head code is
+// "12108010001701"
+// The data is 31h 32h 31h 30h 38h 30h 31h 30h 30h 30h 31h 37h 30h 31h
+
+public struct PrintHeadCode: CustomStringConvertible {
+    public let code: String
+    public var description: String { return "\(self.code)" }
+    public var bytes: [UInt8] { return self.code.asciiValues }
+    
+    public init(bytes: [UInt8]) throws {
+        if bytes.count != 14 { throw ValueError.incorrectNumberOfBytesError }
+        if let string = String(bytes: bytes, encoding: .utf8) {
+            self.code = string
+        } else {
+            throw ValueError.encodingValueError
+        }
+        
+    }
+}
+
+// MARK: Get Photocell Mode 0x13
+// 1byte
+//      - 0 interior trigger
+//      - 1 photocell edge trigger
+//      - 2 photocell level trigger
+//      - 3 remote
+public struct PhotocellMode: CustomStringConvertible {
+    public enum Mode: UInt8, CustomStringConvertible {
+        case interiorTrigger = 0
+        case edgeTrigger = 1
+        case levelTrigger = 2
+        case remote = 3
+        
+        public var description: String {
+            switch self {
+            case .interiorTrigger:
+                return "Interior Trigger"
+            case .edgeTrigger:
+                return "Edge Trigger"
+            case .levelTrigger:
+                return "Level Trigger"
+            case .remote:
+                return "Remote"
+            }
+        }
+    }
+    
+    public let mode: Mode
+    public var description: String { return self.mode.description }
+    public var bytes: [UInt8] { return [UInt8(self.mode.rawValue)] }
+    
+    public init(bytes: [UInt8]) throws {
+        if bytes.count != 1 { throw ValueError.incorrectNumberOfBytesError }
+        if let m = Mode(rawValue: bytes[0]) {
+            self.mode = m
+        } else {
+            throw ValueError.encodingValueError
+        }
+    }
+}
+
+// MARK: Get Jet Status 0x14
+// The 10 bytes of data structure are as follows:
+// [RefPress] 1 byte Reference pressure
+// [Press] 1 byte Set pressure
+// [ReadPress] 1 byte read pressure
+// [SolventAddtion] 1 byte Solvent addition pressure
+// [Modulation] 1 byte modulation
+// [Phase] 1 byte Phase
+// [RefVOD] 2 bytes reference ink speed
+// [VOD] 2 bytes ink speed
+
+public struct JetStatus: CustomStringConvertible {
+    public let referencePressure: UInt8
+    public let setPressure: UInt8
+    public let readPressure: UInt8
+    public let solventAddition: UInt8
+    public let modulation: UInt8
+    public let phase: UInt8
+    public let referenceInkSpeed: UInt16
+    public let inkSpeed: UInt16
+    
+    public var description: String { return "{refp:\(referencePressure),sp:\(setPressure),rp:\(readPressure),sa:\(solventAddition),m:\(modulation),ph:\(phase),ris:\(referenceInkSpeed),is:\(inkSpeed)}" }
+    
+    public init(bytes: [UInt8]) throws {
+        if bytes.count != 10 { throw ValueError.incorrectNumberOfBytesError }
+        self.referencePressure = bytes[0]
+        self.setPressure = bytes[1]
+        self.readPressure = bytes[2]
+        self.solventAddition = bytes[3]
+        self.modulation = bytes[4]
+        self.phase = bytes[5]
+        self.referenceInkSpeed = UInt16(upper: bytes[6], lower: bytes[7])
+        self.inkSpeed = UInt16(upper: bytes[8], lower: bytes[9])
+    }
+}
 
 /*
 // MARK: - Decoding data inside frames
 // You should have a valid frame and know what type it is. Then you can use a function from here to
 // reliably decode the data.
 
-// MARK: Set Reverse Message 0x0B
-public struct ReverseSettings: Equatable {
-    let horizontal: Bool
-    let vertical: Bool
-}
 
-public static func setReverse(address: UInt8 = 0, horizontal: Bool, vertical: Bool, verification: VerificationMode = .crc16) -> Frame {
-    return Frame(address: address, command: .setReverseMessage, data: [vertical ? 1 : 0, horizontal ? 1 : 0], verification: verification)
-}
-
-public static func setReverse(address: UInt8 = 0, settings: ReverseSettings, verification: VerificationMode = .crc16) -> Frame {
-    return Frame(address: address, command: .setReverseMessage, data: [settings.vertical ? 1 : 0, settings.horizontal ? 1 : 0], verification: verification)
-}
-
-// MARK: Get Reverse Message 0x0C
-public static func decodeGetReverse(_ data: [UInt8]) -> ReverseSettings {
-    precondition(data.count == 2, "wrong number of bytes when decodint get reverse message")
-    return ReverseSettings(horizontal: data[0] == 1 ? true : false, vertical: data[1] == 1 ? true : false)
-}
-
-// MARK: Get Trigger Repeat 0x0E
-static public func decodeTriggerRepeat(data: [UInt8]) -> UInt8 {
-    precondition(data.count == 1)
-    return UInt8(data[0])
-}
-
-// MARK: Get Printer Status 0x0F
-// MARK: Get Print Head Code 0x11
-// MARK: Get Photocell Mode 0x13
 // MARK: Get Jet Status 0x14
 // MARK: Get System Times 0x15
 

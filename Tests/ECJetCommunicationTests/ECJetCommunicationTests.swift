@@ -14,7 +14,7 @@ final class ECJetCommunicationTests: XCTestCase {
     
     func dtestStartJetFrame() throws {
         let d: [UInt8] = [0x7E,0x00,0x18,0x00,0x0C,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x1E,0xED,0x7F]
-        let data = Data(d)
+        //let data = Data(d)
         let frame = Frame(address: 0, command: .startPrint, data: [], verification: .crc16)
         let frame2 = Frame(address: 0, command: .startPrint)
         let frame3 = Frame(bytes: d, verificationMethod: .crc16)!
@@ -269,10 +269,4 @@ final class ECJetCommunicationTests: XCTestCase {
         XCTAssertEqual(a.2, 1)
         
     }
-    
-    func testPreconditionFailure() throws {
-        // 0x7e0001000c0000000000000000f40101f9aa7f
-        let frame = Frame(bytes: [0x7e,0x00,0x01,0x00,0x0c,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xf4,0x01,0x01,0xf9,0xaa,0x7f], verificationMethod: .crc16)
-    }
-
 }
