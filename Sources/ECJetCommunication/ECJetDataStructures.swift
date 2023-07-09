@@ -403,69 +403,171 @@ public struct JetStatus: CustomStringConvertible {
     }
 }
 
-/*
-// MARK: - Decoding data inside frames
-// You should have a valid frame and know what type it is. Then you can use a function from here to
-// reliably decode the data.
-
-
-// MARK: Get Jet Status 0x14
 // MARK: Get System Times 0x15
+// 32 bytes of data structure are as follows
+// [PowerOnHour] 4 bytes Boot hours
+// [PowerOnMinute] 4 bytes Power on minutes
+// [JetRunningHour] 4 bytes Jet running hours
+// [JetRunningMinute] 4 bytes Jet running minutes
+// [FilterChangeHour] 4 bytes Main filter replacement remaining hours
+// [FilterChangeMinute] 4 bytes Main filter replacement remaining minutes
+// [ServiceHour] 4 bytes Service time remaining hours
+// [ServiceMinue] 4 bytes Service time remaining minutes
+
+public struct SystemTimes: CustomStringConvertible {
+    public var description: String { "on:\(poweredOn),running:\(jetRunning),filter:\(filterChangeRemaining),service:\(serviceHoursRemaining)" }
+    
+    public let poweredOn: ServiceTime
+    public let jetRunning: ServiceTime
+    public let filterChangeRemaining: ServiceTime
+    public let serviceHoursRemaining: ServiceTime
+    
+    public init(bytes: [UInt8]) throws {
+        if bytes.count != 32 { throw ValueError.incorrectNumberOfBytesError }
+        self.poweredOn = try ServiceTime(bytes: [UInt8](bytes[0...7]))
+        self.jetRunning = try ServiceTime(bytes: [UInt8](bytes[8...15]))
+        self.filterChangeRemaining = try ServiceTime(bytes: [UInt8](bytes[16...23]))
+        self.serviceHoursRemaining = try ServiceTime(bytes: [UInt8](bytes[24...31]))
+    }
+}
+
+public struct ServiceTime: CustomStringConvertible, Equatable {
+    public let hours: UInt32
+    public let minutes: UInt32
+    
+    public var description: String { return "\(hours)hr \(minutes)min"}
+    public var totalHours: Double { return Double(self.hours) + (Double(self.minutes) / 60) }
+    public var totalMinutes: Int { return (Int(self.hours) * 60) + Int(self.minutes) }
+    public var totalSeconds: Int { return self.totalMinutes * 60 }
+    
+    @available(iOS 16, macOS 13.0, *)
+    public var duration: Duration { return Duration.seconds(self.totalSeconds) }
+    
+    public init(hours: UInt32, minutes: UInt32) {
+        self.hours = hours
+        self.minutes = minutes
+    }
+    
+    public init(h: UInt32, m: UInt32) {
+        self = ServiceTime(hours: h, minutes: m)
+    }
+    
+    public init(bytes: [UInt8]) throws {
+        if bytes.count != 8 { throw ValueError.incorrectNumberOfBytesError }
+        self.hours = UInt32(bytes[0])
+        + (UInt32(bytes[1]) << 8)
+        + (UInt32(bytes[2]) << 16)
+        + (UInt32(bytes[3]) << 24)
+        self.minutes = UInt32(bytes[4])
+        + (UInt32(bytes[5]) << 8)
+        + (UInt32(bytes[6]) << 16)
+        + (UInt32(bytes[7]) << 24)
+    }
+}
 
 // MARK: Get Date Time 0x1C
+// 20bytes format is “yyyy.MM.dd-hh:mm:ss” for example “2017.06.30-17:30:00”
+public struct DateTime {
+    public let date: Date
+    
+    public var bytes: [UInt8] { return [] } // TODO: Be able to generate the currrent date in a format for setting the time on the machines
+    //public let dateString: String {  }
+    
+    public init(bytes: [UInt8]) throws {
+        if bytes.count != 20 { throw ValueError.incorrectNumberOfBytesError }
+        let byteString = [UInt8](bytes[0..<19]) // Removes the null termination
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy.MM.dd-HH:mm:ss"
+        formatter.timeZone = TimeZone(identifier: "AEST")
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        
+        if let dateString = String(bytes: byteString, encoding: .utf8), let d = formatter.date(from: dateString) {
+            print(dateString)
+            self.date = d
+        } else {
+            throw ValueError.encodingValueError
+        }
+    }
+    
+    public init(year: Int, month: Int, day: Int, hour: Int, minute: Int) throws {
+        let calendar = Calendar.current
+        
+        var dateComponents = DateComponents()
+        dateComponents.year = year
+        dateComponents.month = month
+        dateComponents.day = day
+        dateComponents.hour = hour
+        dateComponents.minute = minute
+        dateComponents.timeZone = TimeZone(identifier: "AEST")
+        
+        if let d = calendar.date(from: dateComponents) {
+            self.date = d
+        } else {
+            throw ValueError.encodingValueError
+        }
+    }
+}
 
 // MARK: Get Font List 0x1D
 // [FontCount] 1 byte Number of fonts
 // [FontNameList] An array of font names, each font name occupies 16 bytes
 
-public func decodeGetFontList() -> [String] {
-    precondition(self.command == .getFontList)
-    var buffer = self.data
-    let fontCount: UInt8 = buffer[0]
-    precondition(self.data.count == ((Int(fontCount) * 16) + 1))
-    buffer = [UInt8](buffer.dropFirst())
+public struct FontList {
+    public let list: [String]
     
-    let fontBytes = buffer.chunked(into: 16)
-    precondition(fontBytes.count == fontCount)
-    
-    let fontList = fontBytes.map{ bytes in
-        var font = ""
-        if let f = String(bytes: bytes, encoding: .utf8) {
-            font = f.sanitized().whitespaceCondenced()
+    public init(bytes: [UInt8]) throws {
+        var buffer = bytes
+        if bytes.count < 1 { throw ValueError.incorrectNumberOfBytesError }
+        let fontListCount: UInt8 = bytes[0]
+        print(bytes.count)
+        print(((Int(fontListCount) * 16) + 1))
+        if bytes.count != ((Int(fontListCount) * 16) + 1) { throw ValueError.incorrectNumberOfBytesError }
+        buffer = [UInt8](buffer.dropFirst())
+        let fontBytes = buffer.chunked(into: 16)
+        precondition(fontBytes.count == fontListCount)
+        
+        let fontList = fontBytes.map{ bytes in
+            var font = ""
+            if let f = String(bytes: bytes, encoding: .utf8) {
+                font = f.sanitized().whitespaceCondenced()
+            }
+            return font
         }
-        return font
+        self.list = fontList
     }
-    
-    return fontList
 }
-
 
 // MARK: Get Message List 0x1E
 // [FileCount] 2 bytes Number of message
 // [FilleNameList] array of file names, each file name occupies 32 bytes
-public func decodeGetMessageList() -> [String] {
-    precondition(self.command == .getMessageList)
-    var buffer = self.data
-    let messageCount: UInt16 = UInt16(upper: buffer[1], lower: buffer[0])
-    precondition(self.data.count == ((messageCount * 32) + 2))
-    buffer = [UInt8](buffer.dropFirst(2))
+public struct MessageList {
+    public let list: [String]
     
-    let messageBytes = buffer.chunked(into: 32)
-    precondition(messageBytes.count == messageCount)
-    
-    let messageList = messageBytes.map{ bytes in
-        var message = ""
-        if let m = String(bytes: bytes, encoding: .utf8) {
-            message = m.sanitized().whitespaceCondenced()
+    public init(bytes: [UInt8]) throws {
+        var buffer = bytes
+        let messageCount: UInt16 = UInt16(upper: buffer[1], lower: buffer[0])
+        
+        if bytes.count != ((messageCount * 32) + 2) { throw ValueError.incorrectNumberOfBytesError }
+        buffer = [UInt8](buffer.dropFirst(2))
+        
+        let messageBytes = buffer.chunked(into: 32)
+        if messageBytes.count != messageCount { throw ValueError.incorrectNumberOfBytesError }
+        
+        let messageList = messageBytes.map{ bytes in
+            var message = ""
+            if let m = String(bytes: bytes, encoding: .utf8) {
+                message = m.sanitized().whitespaceCondenced()
+            }
+            return message
         }
-        return message
+        self.list = messageList
     }
-    
-    return messageList
 }
 
-
 // MARK: Download Remote Buffer 0x20
+// TODO: Decode the return value from the DownloadRemoteBuffer command. According the the documentation this should simply be a single byte to indicate if the buffer is full or not. The function I have written below though indicates that there might be other data returned. Not sure if this is right or not, needs to be tested onsite.
+/*
 public static func decodeDownloadRemoteBuffer(_ data: [UInt8]) -> String? {
     switch data.count {
     case 2:
@@ -478,6 +580,23 @@ public static func decodeDownloadRemoteBuffer(_ data: [UInt8]) -> String? {
         return String(bytes: bytes, encoding: .utf8)
     }
 }
+*/
+
+// MARK: Set Current Message 0x23
+
+// MARK: Get AUX Mode 0x25
+// [Mode] 1 byte.
+// 0 Turn off the auxiliary eye function 1 serial number reset
+// 2 horizontal reversal
+// 3 vertical reversal
+// 4 horizontal and vertical reversal
+
+
+/*
+// MARK: - Decoding data inside frames
+// You should have a valid frame and know what type it is. Then you can use a function from here to
+// reliably decode the data.
+
 
 // MARK: Get AUX Mode 0x25
 // MARK: Get Shaft Encoder Mode 0x27
