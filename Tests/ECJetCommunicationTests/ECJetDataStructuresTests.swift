@@ -68,11 +68,15 @@ final class ECJetDataStructuresTests: XCTestCase {
         let printCount = try! PrintCount(bytes: frame!.data)
         XCTAssertEqual(printCount.type, .editingData)
         XCTAssertEqual(printCount.count, 12)
+        XCTAssertEqual(printCount.setBytes, [0x02,0x0C,0x00,0x00,0x00])
         
         let getFrame = Frame(bytes: [0x7E,0x00,0x0A,0x00,0x0C,0x00,0x06,0x00,0x00,0x00,0x00,0x00,0x00,0xA2,0x01,0x00,0x00,0xB3,0x61,0x7F], verificationMethod: .crc16)
         let printCount2 = try! PrintCount(type: .editingData, bytes: getFrame!.data)
         XCTAssertEqual(printCount2.type, .editingData)
         XCTAssertEqual(printCount2.count, 418)
+        XCTAssertEqual(printCount2.getBytes, [0xA2,0x01,0x00,0x00])
+        
+        
     }
     
     func testReverseMessage() throws {

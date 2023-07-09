@@ -28,6 +28,17 @@ public extension UInt16 {
     }
 }
 
+public extension UInt32 {
+    var bytes: [UInt8] { [UInt8(self & 0x00FF), UInt8((self >> 8) & 0x00FF), UInt8((self >> 16) & 0x00FF), UInt8((self >> 24) & 0x00FF)] }
+    init(bytes: [UInt8]) {
+        precondition(bytes.count == 4, "Array must have exactly 4 elements")
+        self = UInt32(bytes[0])
+        + (UInt32(bytes[1]) << 8)
+        + (UInt32(bytes[2]) << 16)
+        + (UInt32(bytes[3]) << 24)
+    }
+}
+
 
 public extension Int {
     init(bytes: [UInt8]) {

@@ -154,6 +154,8 @@ public struct PrintCount: CustomStringConvertible {
     }
     public let type: CountType
     public let count: UInt32
+    public var setBytes: [UInt8] { [UInt8(type.rawValue)] + count.bytes } // 5 bytes
+    public var getBytes: [UInt8] { count.bytes }
     
     public var description: String { return "\(self.count)"}
     
@@ -177,6 +179,11 @@ public struct PrintCount: CustomStringConvertible {
         + (UInt32(bytes[2]) << 16)
         + (UInt32(bytes[3]) << 24)
         self.type = type
+    }
+    
+    public init(type: CountType, count: UInt32) {
+        self.type = type
+        self.count = count
     }
 }
 
