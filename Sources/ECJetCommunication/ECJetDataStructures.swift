@@ -144,24 +144,24 @@ public struct PrintHeight: CustomStringConvertible {
 //      - 1 represents the printing data printing count
 //      - 2 represents editing data printing count
 // [PrintCount] 4 bytes print count value
-
+// TODO: PrintCount structure doesn't handle getPrintCount data
 public struct PrintCount: CustomStringConvertible {
     
-    public enum CountType: Int {
+    public enum CountType: UInt8 {
         case total = 0
         case printingData = 1
         case editingData = 2
     }
     public let type: CountType
     public let count: UInt32
-    public var setBytes: [UInt8] { [UInt8(type.rawValue)] + count.bytes } // 5 bytes
-    public var getBytes: [UInt8] { count.bytes }
+    public var setBytes: [UInt8] { [UInt8(type.rawValue)] + count.bytes }
+    public var getBytes: [UInt8] { count.bytes } // This will never be used
     
     public var description: String { return "\(self.count)"}
     
     public init(bytes: [UInt8]) throws {
         if bytes.count != 5 { throw ValueError.incorrectNumberOfBytesError }
-        if let type = CountType(rawValue: Int(bytes[0])) {
+        if let type = CountType(rawValue: bytes[0]) {
             self.type = type
             self.count = UInt32(bytes[1])
             + (UInt32(bytes[2]) << 8)
