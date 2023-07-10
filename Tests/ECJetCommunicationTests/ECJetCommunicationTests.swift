@@ -267,6 +267,11 @@ final class ECJetCommunicationTests: XCTestCase {
         XCTAssertEqual(a.0, 80)
         XCTAssertEqual(a.1, 0)
         XCTAssertEqual(a.2, 1)
-        
+    }
+    
+    func testDoubleFrame() throws {
+        // This data set contains two Frames. Not sure whether I should attempt to figure this out or if failure is acceptable
+        let data: [UInt8] = [126, 0, 20, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 225, 15, 127, 126, 0, 15, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 189, 60, 127]
+        XCTAssertNil(Frame(bytes: [UInt8](data), verificationMethod: .crc16), "Double frame of bytes shouldn't initialise")
     }
 }

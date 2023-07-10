@@ -596,7 +596,6 @@ public struct Frame: CustomStringConvertible {
     }
 
     // MARK: - Byte Escaping
-    // TODO: Byte Escaping
     
     static func byteEscape(buffer: [UInt8]) -> [UInt8] {
         var result: [UInt8] = buffer
