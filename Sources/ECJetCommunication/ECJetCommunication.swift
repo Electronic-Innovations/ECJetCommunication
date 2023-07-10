@@ -554,7 +554,9 @@ public struct Frame: CustomStringConvertible {
             } else {
                 output.append(self.data.description)
             }
-            
+        case .downloadRemoteBuffer:
+            let remoteBuffer = try? RemoteBuffer(bytes: self.data)
+            output.append(remoteBuffer?.buffer ?? self.data.description)
         default:
             output.append("\(self.data)")
         }

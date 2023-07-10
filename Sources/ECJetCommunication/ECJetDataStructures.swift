@@ -248,6 +248,9 @@ public struct TriggerRepeat: CustomStringConvertible {
         if bytes[0] < 1 { throw ValueError.encodingValueError }
         self.count = bytes[0]
     }
+    public init(count: UInt8) {
+        self.count = count
+    }
 }
 
 // MARK: Get Printer Status 0x0F
@@ -320,7 +323,9 @@ public struct PrintHeadCode: CustomStringConvertible {
         } else {
             throw ValueError.encodingValueError
         }
-        
+    }
+    public init(code: String) {
+        self.code = code
     }
 }
 
@@ -362,6 +367,9 @@ public struct PhotocellMode: CustomStringConvertible {
         } else {
             throw ValueError.encodingValueError
         }
+    }
+    public init(mode: Mode) {
+        self.mode = mode
     }
 }
 
@@ -565,6 +573,31 @@ public struct MessageList {
 
 // MARK: Download Remote Buffer 0x20
 // TODO: Decode the return value from the DownloadRemoteBuffer command. According the the documentation this should simply be a single byte to indicate if the buffer is full or not. The function I have written below though indicates that there might be other data returned. Not sure if this is right or not, needs to be tested onsite.
+public struct RemoteBuffer {
+    public let buffer: String
+    
+    public init(bytes: [UInt8]) throws {
+        if bytes.count < 3 { throw ValueError.incorrectNumberOfBytesError }
+        
+        let messageCount = UInt16(upper: bytes[1], lower: bytes[0])
+        if bytes.count != messageCount + 2 { throw ValueError.incorrectNumberOfBytesError }
+        
+        if let m = String(bytes: bytes[2...], encoding: .utf8) {
+            self.buffer = m
+        } else {
+            throw ValueError.encodingValueError
+        }
+    }
+    
+    public var bytes: [UInt8] {
+        let data: [UInt8] = Array(buffer.utf8)
+        let count: UInt16 = UInt16(data.count)
+        return [count.lowerByte] + [count.upperByte] + data
+    }
+}
+
+
+
 /*
 public static func decodeDownloadRemoteBuffer(_ data: [UInt8]) -> String? {
     switch data.count {

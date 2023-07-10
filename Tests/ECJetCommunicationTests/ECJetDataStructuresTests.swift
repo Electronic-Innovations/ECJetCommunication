@@ -208,4 +208,11 @@ final class ECJetDataStructuresTests: XCTestCase {
         let actualList = ["GenStd_5_1.nmk"]
         XCTAssertEqual(messageList.list, actualList)
     }
+    
+    func testDownloadRemoteBuffer() throws {
+        let frame = Frame(bytes: [0x7E,0x00,0x20,0x00,0x0C,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+                                  0x0A,0x00,0x31,0x32,0x33,0x34,0x35,0x36,0x37,0x38,0x39,0x30,0xD4,0x50,0x7F], verificationMethod: .crc16)
+        let remoteBuffer = try! RemoteBuffer(bytes: frame!.data)
+        XCTAssertEqual(remoteBuffer.buffer, "1234567890")
+    }
 }
