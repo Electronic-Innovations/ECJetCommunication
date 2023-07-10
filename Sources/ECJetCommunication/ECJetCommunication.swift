@@ -500,7 +500,61 @@ public struct Frame: CustomStringConvertible {
         switch self.command {
         case .setPrintWidth, .getPrintWidth:
             let width = try? PrintWidth(bytes: self.data)
-            output.append("\(width?.description ?? self.data.description)")
+            output.append(width?.description ?? self.data.description)
+        case .setPrintDelay, .getPrintDelay:
+            let delay = try? PrintDelay(bytes: self.data)
+            output.append(delay?.description ?? self.data.description)
+        case .setPrintInterval, .getPrintInterval:
+            let interval = try? PrintInterval(bytes: self.data)
+            output.append(interval?.description ?? self.data.description)
+        case .setPrintHeight, .getPrintHeight:
+            let height = try? PrintHeight(bytes: self.data)
+            output.append(height?.description ?? self.data.description)
+        case .setPrintCount:
+            let printCount = try? PrintCount(bytes: self.data)
+            output.append(printCount?.description ?? self.data.description)
+        // case .getPrintCount: // TODO:
+        case .setReverseMessage, .getReverseMessage:
+            let reverseMessage = try? ReverseMessage(bytes: self.data)
+            output.append(reverseMessage?.description ?? self.data.description)
+        case .setTriggerRepeat, .getTriggerRepeat:
+            let triggerRepeat = try? TriggerRepeat(bytes: self.data)
+            output.append(triggerRepeat?.description ?? self.data.description)
+        case .getPrinterStatus:
+            let status = try? PrinterStatus(bytes: self.data)
+            output.append(status?.description ?? self.data.description)
+        case .getPrintHeadCode:
+            let printHeadCode = try? PrintHeadCode(bytes: self.data)
+            output.append(printHeadCode?.code ?? self.data.description)
+        case .getPhotocellMode:
+            let photocellMode = try? PhotocellMode(bytes: self.data)
+            output.append(photocellMode?.mode.description ?? self.data.description)
+        case .getJetStatus:
+            let jetStatus = try? JetStatus(bytes: self.data)
+            output.append(jetStatus?.description ?? self.data.description)
+        case .getSystemTimes:
+            let systemTimes = try? SystemTimes(bytes: self.data)
+            output.append(systemTimes?.description ?? self.data.description)
+        case .getDateTime:
+            let dateTime = try? DateTime(bytes: self.data)
+            output.append(dateTime?.date.description ?? self.data.description)
+        case .getFontList:
+            if let fontList = try? FontList(bytes: self.data) {
+                for item in fontList.list {
+                    output.append("\(item),")
+                }
+            } else {
+                output.append(self.data.description)
+            }
+        case .getMessageList:
+            if let messageList = try? MessageList(bytes: self.data) {
+                for item in messageList.list {
+                    output.append("\(item),")
+                }
+            } else {
+                output.append(self.data.description)
+            }
+            
         default:
             output.append("\(self.data)")
         }

@@ -157,7 +157,7 @@ public struct PrintCount: CustomStringConvertible {
     public var setBytes: [UInt8] { [UInt8(type.rawValue)] + count.bytes }
     public var getBytes: [UInt8] { count.bytes } // This will never be used
     
-    public var description: String { return "\(self.count)"}
+    public var description: String { "\(self.type):\(self.count)"}
     
     public init(bytes: [UInt8]) throws {
         if bytes.count != 5 { throw ValueError.incorrectNumberOfBytesError }
@@ -174,10 +174,7 @@ public struct PrintCount: CustomStringConvertible {
     
     public init(type: CountType, bytes: [UInt8]) throws {
         if bytes.count != 4 { throw ValueError.incorrectNumberOfBytesError }
-        self.count = UInt32(bytes[0])
-        + (UInt32(bytes[1]) << 8)
-        + (UInt32(bytes[2]) << 16)
-        + (UInt32(bytes[3]) << 24)
+        self.count = UInt32(bytes: bytes)
         self.type = type
     }
     
@@ -293,10 +290,7 @@ public struct PrinterStatus: CustomStringConvertible {
         if bytes.count != 5 { throw ValueError.incorrectNumberOfBytesError }
         if let status = WorkingStatus(rawValue: UInt8(bytes[0])) {
             self.status = status
-            self.warningStatus = UInt32(bytes[1])
-            + (UInt32(bytes[2]) << 8)
-            + (UInt32(bytes[3]) << 16)
-            + (UInt32(bytes[4]) << 24)
+            self.warningStatus = UInt32(bytes:[UInt8](bytes[1..<4]))
         } else {
             throw ValueError.encodingValueError
         }
@@ -304,10 +298,7 @@ public struct PrinterStatus: CustomStringConvertible {
     
     public init(status: WorkingStatus, bytes: [UInt8]) throws {
         if bytes.count != 4 { throw ValueError.incorrectNumberOfBytesError }
-        self.warningStatus = UInt32(bytes[0])
-        + (UInt32(bytes[1]) << 8)
-        + (UInt32(bytes[2]) << 16)
-        + (UInt32(bytes[3]) << 24)
+        self.warningStatus = UInt32(bytes: bytes)
         self.status = status
     }
 }
