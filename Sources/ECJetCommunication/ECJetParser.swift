@@ -17,6 +17,8 @@ enum Fragment {
 public class Tokenizer {
     var buffer: [UInt8] = []
     
+    public init() {}
+    
     func process(input: [UInt8]) -> (Fragment?, Fragment) {
         let messageStart = input.firstIndex(of: 126)
         let messageFinish = input.firstIndex(of: 127)
