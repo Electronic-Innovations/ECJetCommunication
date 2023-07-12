@@ -8,13 +8,13 @@
 import Foundation
 
 enum Fragment {
-    case prelude([UInt8])
+    //case prelude([UInt8])
     case token([UInt8])
     case unprocessed([UInt8])
     case aftermath([UInt8])
 }
 
-class Tokenizer {
+public class Tokenizer {
     var buffer: [UInt8] = []
     
     func process(input: [UInt8]) -> (Fragment?, Fragment) {
@@ -46,7 +46,7 @@ class Tokenizer {
         }
     }
     
-    func next() -> [UInt8]? {
+    public func next() -> [UInt8]? {
         var processing: Bool = true
         var token:[UInt8]? = nil
         
@@ -69,28 +69,8 @@ class Tokenizer {
         return token
     }
     
-    func append(input: [UInt8]) {
+    public func append(input: [UInt8]) {
         self.buffer = self.buffer + input
     }
-    
-    func oneFrame(input: [UInt8]) -> [UInt8]? {
-        let messageStart = input.firstIndex(of: 126)
-        let messageFinish = input.firstIndex(of: 127)
-        if let start = messageStart, let finish = messageFinish {
-            let message = [UInt8](input[start...finish])
-            return message
-        }
-        return nil
-    }
-    
-    func tokenizeFrames(data: [UInt8]) -> [[UInt8]] {
-        let frames = data.split(separator: 0x7D)
-            .filter { !$0.isEmpty }
-            .map { Array($0) + [0x7D] }
-
-        return frames
-    }
-
-    
 }
 
