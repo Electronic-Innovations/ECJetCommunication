@@ -293,7 +293,7 @@ public struct PrinterStatus: CustomStringConvertible {
         if bytes.count != 5 { throw ValueError.incorrectNumberOfBytesError }
         if let status = WorkingStatus(rawValue: UInt8(bytes[0])) {
             self.status = status
-            self.warningStatus = UInt32(bytes:[UInt8](bytes[1..<4]))
+            self.warningStatus = UInt32(bytes:[UInt8](bytes[1...4]))
         } else {
             throw ValueError.encodingValueError
         }
@@ -476,8 +476,14 @@ public struct ServiceTime: CustomStringConvertible, Equatable {
 public struct DateTime {
     public let date: Date
     
-    public var bytes: [UInt8] { return [] } // TODO: Be able to generate the currrent date in a format for setting the time on the machines
-    //public let dateString: String {  }
+    public var bytes: [UInt8] { return [UInt8](self.dateString.utf8) + [0] }
+    public var dateString: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy.MM.dd-HH:mm:ss"
+        formatter.timeZone = TimeZone(identifier: "AEST")
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter.string(from: self.date)
+    }
     
     public init(bytes: [UInt8]) throws {
         if bytes.count != 20 { throw ValueError.incorrectNumberOfBytesError }
