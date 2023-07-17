@@ -287,6 +287,8 @@ public struct PrinterStatus: CustomStringConvertible {
     public let status: WorkingStatus
     public let warningStatus: UInt32
     
+    public var bytes: [UInt8] { [status.rawValue] + warningStatus.bytes }
+    
     public var description: String { return "\(self.status.description()), \(warningStatus)" } // TODO: warningStatus in human readable form.
     
     public init(bytes: [UInt8]) throws {
