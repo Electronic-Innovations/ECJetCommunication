@@ -174,9 +174,14 @@ public struct Frame: CustomStringConvertible {
     public init?(bytes: [UInt8], verificationMethod: VerificationMode) {
         var input = bytes
         
-        // The smallest packet must be at least 14 bytes
-        if input.count < 14 {
-            return nil
+        // Needs to be at least a certain number of bytes to form a frame.
+        switch verificationMethod {
+        case .none:
+            if input.count < 14 { return nil }
+        case .mod256:
+            if input.count < 15 { return nil }
+        case .crc16:
+            if input.count < 16 { return nil }
         }
         
         // Check first byte
