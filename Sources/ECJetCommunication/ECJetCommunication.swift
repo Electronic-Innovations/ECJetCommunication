@@ -676,6 +676,10 @@ public struct Frame: CustomStringConvertible, Hashable {
         return lhs.bytes == rhs.bytes
     }
     
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(self.bytes)
+    }
+    
     /*
     // Original Code
     void MainWindow::changeData(QByteArray &ba)
