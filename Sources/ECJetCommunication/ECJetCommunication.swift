@@ -126,7 +126,7 @@ public struct CommandInformation {
 
 
 
-public struct Frame: CustomStringConvertible {
+public struct Frame: CustomStringConvertible, Hashable {
     
     public let address: UInt8
     public let command: Command
@@ -670,6 +670,10 @@ public struct Frame: CustomStringConvertible {
         }
         
         return result
+    }
+    
+    public static func == (lhs: Frame, rhs: Frame) -> Bool {
+        return lhs.bytes == rhs.bytes
     }
     
     /*
