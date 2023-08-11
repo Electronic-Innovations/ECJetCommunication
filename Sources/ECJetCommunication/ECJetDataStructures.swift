@@ -164,7 +164,7 @@ public struct PrintCount: CustomStringConvertible {
         }
     }
     
-    public var description: String { "\(self.type):\(self.count)"}
+    public var description: String { "\(String(describing: self.type)):\(self.count)"}
     
     public init(bytes: [UInt8]) throws {
         switch bytes.count {
