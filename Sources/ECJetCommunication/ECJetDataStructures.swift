@@ -152,24 +152,42 @@ public struct PrintCount: CustomStringConvertible {
         case printingData = 1
         case editingData = 2
     }
-    public let type: CountType
+    public let type: CountType?
     public let count: UInt32
-    public var setBytes: [UInt8] { [UInt8(type.rawValue)] + count.bytes }
-    public var getBytes: [UInt8] { count.bytes } // This will never be used
+    //public var setBytes: [UInt8] { [UInt8(type.rawValue)] + count.bytes }
+    //public var getBytes: [UInt8] { count.bytes } // This will never be used
+    public var bytes: [UInt8] {
+        if let ct = type {
+            return [UInt8(ct.rawValue)] + count.bytes
+        } else {
+            return count.bytes
+        }
+    }
     
     public var description: String { "\(self.type):\(self.count)"}
     
     public init(bytes: [UInt8]) throws {
-        if bytes.count != 5 { throw ValueError.incorrectNumberOfBytesError }
-        if let type = CountType(rawValue: bytes[0]) {
-            self.type = type
-            self.count = UInt32(bytes[1])
-            + (UInt32(bytes[2]) << 8)
-            + (UInt32(bytes[3]) << 16)
-            + (UInt32(bytes[4]) << 24)
-        } else {
-            throw ValueError.encodingValueError
+        switch bytes.count {
+        case 5:
+            if let type = CountType(rawValue: bytes[0]) {
+                self.type = type
+                self.count = UInt32(bytes[1])
+                + (UInt32(bytes[2]) << 8)
+                + (UInt32(bytes[3]) << 16)
+                + (UInt32(bytes[4]) << 24)
+            } else {
+                throw ValueError.encodingValueError
+            }
+        case 4:
+            self.type = nil
+            self.count = UInt32(bytes[0])
+            + (UInt32(bytes[1]) << 8)
+            + (UInt32(bytes[2]) << 16)
+            + (UInt32(bytes[3]) << 24)
+        default:
+            throw ValueError.incorrectNumberOfBytesError
         }
+        
     }
     
     public init(type: CountType, bytes: [UInt8]) throws {
