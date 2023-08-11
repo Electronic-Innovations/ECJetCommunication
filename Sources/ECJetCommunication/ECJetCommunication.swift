@@ -304,6 +304,14 @@ public struct Frame: CustomStringConvertible, Hashable {
         return Frame(address: address, command: .downloadRemoteBuffer, data: buffer)
     }
     
+    public static func remoteBufferResponse(address: UInt8, message: String) -> Frame {
+        let data: [UInt8] = Array(message.utf8)
+        let count: UInt16 = UInt16(data.count)
+        let information = CommandInformation(acknowledge: .complete)
+        let buffer = [count.lowerByte] + [count.upperByte] + data
+        return Frame(address: address, command: .downloadRemoteBuffer, information: information, data: buffer)
+    }
+    
     public enum CountType: UInt8 {
         case total = 0x00
         case printing = 0x01
