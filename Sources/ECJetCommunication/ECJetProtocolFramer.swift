@@ -8,6 +8,7 @@
 import Foundation
 import Network
 
+@available(iOS 13.0, *)
 final class ECJetProtocol: NWProtocolFramerImplementation {
 
     static let definition = NWProtocolFramer.Definition(implementation: ECJetProtocol.self)
