@@ -232,6 +232,21 @@ public struct ReverseMessage: Equatable, CustomStringConvertible {
     public var bytes: [UInt8] { return [horizontal.isNormal() ? 0 : 1, vertical.isNormal() ? 0 : 1] }
     public var description: String { return "\(horizontal.isNormal() ? "➡️" : "⬅️")\(vertical.isNormal() ? "⬆️" : "⬇️")"}
     
+    public init(horizontal: Orientation, vertical: Orientation) {
+        self.horizontal = horizontal
+        self.vertical = vertical
+    }
+    
+    public init(horizontalFlipped: Bool, verticalFlipped: Bool) {
+        self.horizontal = horizontalFlipped ? .flipped : .normal
+        self.vertical = verticalFlipped ? .flipped : .normal
+    }
+    
+    public init(flipped: Bool) {
+        self.horizontal = flipped ? .normal : .flipped
+        self.vertical = flipped ? .flipped : .normal
+    }
+    
     public init(bytes: [UInt8]) throws {
         if bytes.count != 2 { throw ValueError.incorrectNumberOfBytesError }
         switch bytes[0] {
@@ -251,6 +266,11 @@ public struct ReverseMessage: Equatable, CustomStringConvertible {
         default:
             throw ValueError.encodingValueError
         }
+    }
+    
+    public func toggle() -> ReverseMessage {
+        return ReverseMessage(horizontal: self.horizontal.isFlipped() ? .normal : .flipped,
+                              vertical: self.vertical.isFlipped() ? .normal : .flipped)
     }
 }
 
