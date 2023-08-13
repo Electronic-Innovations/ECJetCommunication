@@ -226,8 +226,8 @@ public struct ReverseMessage: Equatable, CustomStringConvertible {
         }
     }
     
-    let horizontal: Orientation
-    let vertical: Orientation
+    public let horizontal: Orientation
+    public let vertical: Orientation
     
     public var bytes: [UInt8] { return [horizontal.isNormal() ? 0 : 1, vertical.isNormal() ? 0 : 1] }
     public var description: String { return "\(horizontal.isNormal() ? "➡️" : "⬅️")\(vertical.isNormal() ? "⬆️" : "⬇️")"}
