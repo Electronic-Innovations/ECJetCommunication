@@ -57,6 +57,7 @@ public enum Command: UInt16 {
     case getReferenceModulation = 0x0029
     case resetSerialNumber = 0x002A
     case resetCountLength = 0x002B
+    case getRemoteBufferSize = 0x002F
     case printTriggerState = 0x1000
     case printGoState = 0x1001
     case printEndState = 0x1002
