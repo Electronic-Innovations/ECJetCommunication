@@ -304,7 +304,7 @@ public struct TriggerRepeat: CustomStringConvertible {
 // - 0002h indicates that there is a warning message 3.01
 // - 0003h indicates that there are warning messages 3.00 and 3.01
 
-public enum Warning: Int {
+public enum Warning: UInt32 {
     case noVODAdjustments
     case jetShutDownIncomplete
     case overSpeedPrintGo
@@ -394,6 +394,10 @@ public enum Warning: Int {
         return Warning.definition[self]!.name
     }
     
+    public var code: String {
+        return Warning.definition[self]!.code
+    }
+    
     public var explanation: String {
         return Warning.definition[self]!.explanation
     }
@@ -402,59 +406,28 @@ public enum Warning: Int {
         return Warning.definition[self]!.possibleCauses
     }
     
-    public var code: String {
-        return Warning.definition[self]!.code
-        /*
-        switch self {
-            case .noVODAdjustments:
-                return "3.00"
-            case .jetShutDownIncomplete:
-                return "3.01"
-            case .overSpeedPrintGo:
-                return "3.02"
-            case .inkLow:
-                return "3.03"
-            case .solventLow:
-                return "3.04"
-            case .printGoRemoteData:
-                return "3.05"
-            case .serviceTime:
-                return "3.06"
-            case .printHeadCoverOff:
-                return "3.07"
-            case .printHeadNotFitted:
-                return "3.08"
-            case .newPrintHeadFitted:
-                return "3.09"
-            case .chargeCalibrationRange:
-                return "3.10"
-            case .safetyOverrideDetected:
-                return "3.11"
-            case .lowPressure:
-                return "3.12"
-            case .modulation:
-                return "3.13"
-            case .overSpeedVariableData:
-                return "3.14"
-        }
-         */
-    }
-    
-    public static func from(status: UInt32) -> [Warning] {
-        var result: [Warning] = []
+    public static func from(status: UInt32) -> Set<Warning> {
+        var result: Set<Warning> = []
         
         var mask: UInt32 = 1
         for i in 0..<32 {
             if status & mask != 0 {
-                // Bit at position i is on
-                print("Bit \(i) is on")
-                // Perform your desired action here
-                if let warning = Warning(rawValue: i) {
-                    result.append(warning)
+                if let warning = Warning(rawValue: UInt32(i)) {
+                    result.insert(warning)
                 }
             }
             mask <<= 1
         }
+        return result
+    }
+    
+    public static func status(from warnings: Set<Warning>) -> UInt32 {
+        var result: UInt32 = 0
+        
+        for warning in warnings {
+            result |= (1 << warning.rawValue)
+        }
+        
         return result
     }
 }

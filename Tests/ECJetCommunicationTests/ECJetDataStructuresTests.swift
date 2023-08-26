@@ -229,4 +229,11 @@ final class ECJetDataStructuresTests: XCTestCase {
         XCTAssertEqual(warning.name, "Ink Low")
         XCTAssertEqual(warning.code, "3.03")
     }
+    
+    func testWarning3() throws {
+        let warnings: Set<Warning> = [.inkLow, .modulation, .overSpeedPrintGo, .printHeadNotFitted]
+        let status = Warning.status(from: warnings)
+        XCTAssertEqual(status, 8460)
+        XCTAssertEqual(Warning.from(status: status), warnings)
+    }
 }
