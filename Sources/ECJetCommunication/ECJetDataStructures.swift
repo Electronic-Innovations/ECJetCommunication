@@ -304,6 +304,161 @@ public struct TriggerRepeat: CustomStringConvertible {
 // - 0002h indicates that there is a warning message 3.01
 // - 0003h indicates that there are warning messages 3.00 and 3.01
 
+public enum Warning: Int {
+    case noVODAdjustments
+    case jetShutDownIncomplete
+    case overSpeedPrintGo
+    case inkLow
+    case solventLow
+    case printGoRemoteData
+    case serviceTime
+    case printHeadCoverOff
+    case printHeadNotFitted
+    case newPrintHeadFitted
+    case chargeCalibrationRange
+    case safetyOverrideDetected
+    case lowPressure
+    case modulation
+    case overSpeedVariableData
+    
+    struct WarningInformation {
+        let name: String
+        let code: String
+        let explanation: String
+        let possibleCauses: [String]
+    }
+    
+    static let definition: [Warning: WarningInformation] =
+    [.noVODAdjustments: WarningInformation(name: "No VOD Adjustments",
+                                           code: "3.00",
+                                           explanation: "This warning can occur when the jet is being started, or when the jet has been running for some time.",
+                                           possibleCauses: ["Printhead code values are set incorrectly. Check the Printhead and Modulation values printed on the print head serial number label found on the conduit, with the stored values. (see “hanging the System Setup”)", "Ink viscosity is excessively out of range. Allow the printer to run to bring the viscosity back into range.", "There is a pressure loss in the system. Contact your local EC-JET distributor."]),
+     .jetShutDownIncomplete: WarningInformation(name: "Jet Shut Down Incomplete",
+                                                code: "3.01",
+                                                explanation: "This indicates that the printer was previously switched off while the jet was running or before the printer had completed the shutdown routine. Completion of the shutdown routine is important. EC2000 has the function of automatic outage. The user just need to select “Yes” when “automatic outage” pop up on the screen. The printer will automatically cut off the power after the shutdown delay procedure when the shutdown routine finished. It’s no need to cut off the power manually. The warning does not stop the printer from functioning. If the last time shutdown routine is not executed completely, the warning will appear. The warning will disappear after a complete shutdown routine is finished.",
+                                                possibleCauses: ["The printer was previously switched off while the jet was running or before the printer had completed the shutdown routine"]),
+     .overSpeedPrintGo: WarningInformation(name: "Over Speed (Print Go)",
+                                           code: "3.02",
+                                           explanation: "This indicated that the printer may have missed printing at least one pattern or is receiving false triggers from the photocell. When the Photocell Mode is set to Trigger, each print delay is started following the photocell trigger. At the end of the delay a “print go” is issued to start printing. If the printer has not printed the last pattern by this time, the warning is reported and the new pattern is not printed. In effect, this will mean that alternate objects will NOT be printed on. The warning applies to the current printing is reset automatically when printing is restarted.",
+                                           possibleCauses: ["The next object has arrived at the print head before the last pattern is complete because: 1. The line speed is too fast. 2. The pattern is too long compared to size of the objects to be printed on.", "The photocell is giving false triggers."]),
+     .inkLow: WarningInformation(name: "Ink Low",
+                                 code: "3.03",
+                                 explanation: "If the ink level sensor indicates that the ink reservoir is low then this warning is given. It is cleared automatically when a sufficient amount of ink is added. Do NOT put in more than one bottle(500ml) each time. If the ink low condition is detected before the jet is started, then the jet cannot be started until the ink tank is replenished. If the condition is detected while the jet is running, the jet will continue to run for several hours until the ink is dangerously low, at which point a failure will occur (see Print Failure “2.06”). NOTE: Please operate according to chapter “8.2 Replenishing Ink and Solvent” of the manual.",
+                                 possibleCauses: []),
+     .solventLow: WarningInformation(name: "Solvent Low",
+                                     code: "3.04",
+                                     explanation: "If the solvent level sensor indicates that the solvent reservoir is low, then this warning is given. It is cleared automatically when a sufficient amount of solvent is added to the reservoir. Do NOT put in more than one bottle (500ml) each time. If the solvent low condition is detected before the jet is started, then the jet cannot be started until the solvent tank is replenished. If the condition is detected while the jet is running, the jet will continue to run regardless, but no attempt will be made to add solvent. NOTE: Please operate according to chapter “8.2 Replenishing Ink and Solvent” of the manual.",
+                                     possibleCauses: []),
+     .printGoRemoteData: WarningInformation(name: "Print Go / Remote Data",
+                                            code: "3.05",
+                                            explanation: "A “print go” has occurred and printing data has not been received from the remote interface. Make sure the transmission cable and the port are right setting.",
+                                            possibleCauses: []),
+     .serviceTime: WarningInformation(name: "Service Time",
+                                      code: "3.06",
+                                      explanation: "When the jet is started, the time remaining to the next service is checked. If it exceeds 4000 hours then this warning is reported and the jet is started as normal. This warning will be reported on every jet start up until the service time has been reset. Maintenance should be made when there is warning, otherwise it will affect the machine performance and stability.",
+                                      possibleCauses: []),
+     .printHeadCoverOff: WarningInformation(name: "Print Head Cover Off",
+                                            code: "3.07",
+                                            explanation: "This warning is reported if the print head cover is removed. The supply to the EHT plates is switched off (by hardware) when the cover is removed. WARNING: THERE IS A LINK WHICH, WHEN FITTED, DISABLES THIS AUTOMATIC SHUT OFF. THEREFORE, THE PRESENCE OF THIS WARNING IS NOT A GUARANTEE THAT THE EHT IS OFF. Printing is suspended when the cover is removed and is resumed a few seconds after the cover is refitted. The warning supplies to the currently printing pattern - it is reset automatically when printing is restarted.",
+                                            possibleCauses: []),
+     .printHeadNotFitted: WarningInformation(name: "Print Head Not Fitted",
+                                             code: "3.08",
+                                             explanation: "At start up the software checks the type of print of print head that is fitted. If it does not recognize the print head type this warning is reported. The system will continue to operate on the assumption that the print head has not been changed, and will continue with the same print head type as used previously (i.e. the currently stored NVR print head type). If a new type of print head has been fitted, but has not been detected correctly, the modulation frequency, voltage, etc., will all be incorrect. Therefore, the jet will not break up properly, and a phase fault (2.02) will probably occur when starting the jet.",
+                                             possibleCauses: []),
+     .newPrintHeadFitted: WarningInformation(name: "New Print Head Fitted",
+                                             code: "3.09",
+                                             explanation: "At start up the software checks the type of print head fitted. The last print head type used is stored in the printer is memory.If the currently fitted type is not the same as the type stored in memory then this error is reported and the type in memory is updated. This warning should only ever occur when a new print head is fitted. If it occurs at other times then the memory may be corrupt, or the print head connector faulty. Under normal circumstances this warning just confirms that the print head type has been changed. The defaults for VOD, modulation, etc., will be used, until the user enters a new print head code in the SETUP menu. If the wrong type of print head has been detected for any reason, the modulation frequency, voltage, etc. will all be incorrect. Therefore, the jet will not break up properly, and a phase fault (2.02) may occur when starting the jet, or poor print quality may result.",
+                                             possibleCauses: []),
+     .chargeCalibrationRange: WarningInformation(name: "Charge Calibration Range",
+                                                 code: "3.10",
+                                                 explanation: "Contact your local EC-JET distributor if this error is reported.",
+                                                 possibleCauses: []),
+     .safetyOverrideDetected: WarningInformation(name: "Safety Override Detected",
+                                                 code: "3.11",
+                                                 explanation: "This warning message alters the user when the safety override link is fitted. WARNING: DO NOT START THE PRINTER WHEN THIS ERROR MESSAGE IS PRESENT. PRINTER SAFETY CIRCUITS AND SENSORS WILL NOT BE FUNCTIONING. IN THE EVENT OF THIS ERROR MESSAGE OCCURRING, SWITCH OFF THE PRINTER AND CONTACT YOUR LOCAL EC-JET DISTRIBUTOR IMMEDIATELY.",
+                                                 possibleCauses: []),
+     .lowPressure: WarningInformation(name: "Low Pressure",
+                                      code: "3.12",
+                                      explanation: "When starting the jet the printer has detected a loss of ink pressure, which will affect the printer’s performance.",
+                                      possibleCauses: ["The main ink filter is blocked.", "Pump output is low. (Contact your local EC-JET distributor.)"]),
+     .modulation: WarningInformation(name: "Modulation",
+                                     code: "3.13",
+                                     explanation: "",
+                                     possibleCauses: []),
+     .overSpeedVariableData: WarningInformation(name: "Over Speed Variable Data",
+                                                code: "3.14",
+                                                explanation: "This indicates that the printer has missed at least one pattern because it cannot generate the pattern’s variable data (e.g. sequential numbers) at the required rate - i.e. the printer was still generating pixel data for the next “print go” when the “print go” occurred. The warning applies to the current pattern - it is reset automatically when printing is restarted. NOTE: This warning indicates the printer cannot generate pixels fast enough, whereas System Warning 3.02 indicates the printer cannot print the rasters fast enough.. This warning is only likely to occur for fast rasters (e.g. rasters smaller than 16 drops for Micro print head), where pixel generation by the software is slower than the rate at which the hardware can print rasters.",
+                                                possibleCauses: ["The amount of variable data in the pattern is too long for the current rate of print triggers. Reduce the amount of variable data, if possible."])]
+    
+    public var name: String {
+        return Warning.definition[self]!.name
+    }
+    
+    public var explanation: String {
+        return Warning.definition[self]!.explanation
+    }
+    
+    public var possibleCauses: [String] {
+        return Warning.definition[self]!.possibleCauses
+    }
+    
+    public var code: String {
+        return Warning.definition[self]!.code
+        /*
+        switch self {
+            case .noVODAdjustments:
+                return "3.00"
+            case .jetShutDownIncomplete:
+                return "3.01"
+            case .overSpeedPrintGo:
+                return "3.02"
+            case .inkLow:
+                return "3.03"
+            case .solventLow:
+                return "3.04"
+            case .printGoRemoteData:
+                return "3.05"
+            case .serviceTime:
+                return "3.06"
+            case .printHeadCoverOff:
+                return "3.07"
+            case .printHeadNotFitted:
+                return "3.08"
+            case .newPrintHeadFitted:
+                return "3.09"
+            case .chargeCalibrationRange:
+                return "3.10"
+            case .safetyOverrideDetected:
+                return "3.11"
+            case .lowPressure:
+                return "3.12"
+            case .modulation:
+                return "3.13"
+            case .overSpeedVariableData:
+                return "3.14"
+        }
+         */
+    }
+    
+    public static func from(status: UInt32) -> [Warning] {
+        var result: [Warning] = []
+        
+        var mask: UInt32 = 1
+        for i in 0..<32 {
+            if status & mask != 0 {
+                // Bit at position i is on
+                print("Bit \(i) is on")
+                // Perform your desired action here
+                if let warning = Warning(rawValue: i) {
+                    result.append(warning)
+                }
+            }
+            mask <<= 1
+        }
+        return result
+    }
+}
+
 public struct PrinterStatus: CustomStringConvertible {
     
     public enum WorkingStatus: UInt8 {
@@ -322,8 +477,10 @@ public struct PrinterStatus: CustomStringConvertible {
             }
         }
     }
+    
     public let status: WorkingStatus
     public let warningStatus: UInt32
+    //public let warnings: [Warning]
     
     public var bytes: [UInt8] { [status.rawValue] + warningStatus.bytes }
     

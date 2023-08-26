@@ -215,4 +215,18 @@ final class ECJetDataStructuresTests: XCTestCase {
         let remoteBuffer = try! RemoteBuffer(bytes: frame!.data)
         XCTAssertEqual(remoteBuffer.buffer, "1234567890")
     }
+    
+    func testWarning() throws {
+        let code: UInt32 = 3
+        let warnings = Warning.from(status: code)
+        XCTAssertEqual(warnings, [.noVODAdjustments, .jetShutDownIncomplete])
+    }
+    
+    func testWarning2() throws {
+        let code: UInt32 = 8
+        let warnings = Warning.from(status: code)
+        let warning = warnings.first!
+        XCTAssertEqual(warning.name, "Ink Low")
+        XCTAssertEqual(warning.code, "3.03")
+    }
 }
