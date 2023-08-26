@@ -304,7 +304,10 @@ public struct TriggerRepeat: CustomStringConvertible {
 // - 0002h indicates that there is a warning message 3.01
 // - 0003h indicates that there are warning messages 3.00 and 3.01
 
-public enum Warning: UInt32 {
+public enum Warning: UInt32, Identifiable {
+    //public var id: ObjectIdentifier
+    public var id: Self { return self }
+    
     case noVODAdjustments
     case jetShutDownIncomplete
     case overSpeedPrintGo
