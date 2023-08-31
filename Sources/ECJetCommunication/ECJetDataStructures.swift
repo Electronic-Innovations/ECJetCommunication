@@ -567,6 +567,17 @@ public struct JetStatus: CustomStringConvertible {
     public let referenceInkSpeed: UInt16
     public let inkSpeed: UInt16
     
+    public var bytes: [UInt8] { [referencePressure,
+                                 setPressure,
+                                 readPressure,
+                                 solventAddition,
+                                 modulation,
+                                 phase,
+                                 referenceInkSpeed.lowerByte,
+                                 referenceInkSpeed.upperByte,
+                                 inkSpeed.lowerByte,
+                                 inkSpeed.upperByte] }
+    
     public var description: String { return "{refp:\(referencePressure),sp:\(setPressure),rp:\(readPressure),sa:\(solventAddition),m:\(modulation),ph:\(phase),ris:\(referenceInkSpeed),is:\(inkSpeed)}" }
     
     public init(bytes: [UInt8]) throws {
@@ -577,8 +588,8 @@ public struct JetStatus: CustomStringConvertible {
         self.solventAddition = bytes[3]
         self.modulation = bytes[4]
         self.phase = bytes[5]
-        self.referenceInkSpeed = UInt16(upper: bytes[6], lower: bytes[7])
-        self.inkSpeed = UInt16(upper: bytes[8], lower: bytes[9])
+        self.referenceInkSpeed = UInt16(upper: bytes[7], lower: bytes[6])
+        self.inkSpeed = UInt16(upper: bytes[9], lower: bytes[8])
     }
 }
 

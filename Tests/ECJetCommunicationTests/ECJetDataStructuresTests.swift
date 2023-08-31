@@ -117,7 +117,8 @@ final class ECJetDataStructuresTests: XCTestCase {
     }
     
     func testJetStatus() throws {
-        let frame = Frame(bytes: [0x7E,0x00,0x14,0x00,0x0C,0x00,0x06,0x00,0x00,0x00,0x00,0x00,0x00,0xAA,0xAA,0x00,0xAE,0x83,0x0C,0x59,0x52,0x00,0x00,0xE9,0x09,0x7F], verificationMethod: .crc16)
+        let bytes: [UInt8] = [0x7E,0x00,0x14,0x00,0x0C,0x00,0x06,0x00,0x00,0x00,0x00,0x00,0x00,0xAA,0xAA,0x00,0xAE,0x83,0x0C,0x59,0x52,0x00,0x00,0xE9,0x09,0x7F]
+        let frame = Frame(bytes: bytes, verificationMethod: .crc16)
         let jetStatus = try! JetStatus(bytes: frame!.data)
         XCTAssertEqual(jetStatus.referencePressure, 0xAA)
         XCTAssertEqual(jetStatus.setPressure, 0xAA)
@@ -125,8 +126,9 @@ final class ECJetDataStructuresTests: XCTestCase {
         XCTAssertEqual(jetStatus.solventAddition, 0xAE)
         XCTAssertEqual(jetStatus.modulation, 0x83)
         XCTAssertEqual(jetStatus.phase, 0x0C)
-        XCTAssertEqual(jetStatus.referenceInkSpeed, 0x5952)
+        XCTAssertEqual(jetStatus.referenceInkSpeed, 0x5259)
         XCTAssertEqual(jetStatus.inkSpeed, 0x0000)
+        XCTAssertEqual(jetStatus.bytes, frame!.data)
     }
     
     func testSystemTimes() throws {
