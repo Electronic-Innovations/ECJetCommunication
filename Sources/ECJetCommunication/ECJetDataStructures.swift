@@ -812,6 +812,21 @@ public static func decodeDownloadRemoteBuffer(_ data: [UInt8]) -> String? {
 // 3 vertical reversal
 // 4 horizontal and vertical reversal
 
+// MARK: Get Remote Buffer Size 0x2F
+// [4, 0, 0, 0] 4 messages in the buffer
+public struct RemoteBufferSize {
+    public let count: UInt32
+    
+    public init(bytes: [UInt8]) throws {
+        if bytes.count != 4 { throw ValueError.incorrectNumberOfBytesError }
+        
+        self.count = UInt32(bytes[0])
+        + (UInt32(bytes[1]) << 8)
+        + (UInt32(bytes[2]) << 16)
+        + (UInt32(bytes[3]) << 24)
+    }
+}
+
 
 /*
 // MARK: - Decoding data inside frames

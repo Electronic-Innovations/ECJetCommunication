@@ -238,4 +238,10 @@ final class ECJetDataStructuresTests: XCTestCase {
         XCTAssertEqual(status, 8460)
         XCTAssertEqual(Warning.from(status: status), warnings)
     }
+    
+    func testRemoteBufferSize() throws {
+        let input: [UInt8] = [4,0,0,0]
+        let bufferSize = try RemoteBufferSize(bytes: input)
+        XCTAssertEqual(bufferSize.count, 4)
+    }
 }
