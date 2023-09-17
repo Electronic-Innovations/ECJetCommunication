@@ -816,6 +816,7 @@ public static func decodeDownloadRemoteBuffer(_ data: [UInt8]) -> String? {
 // [4, 0, 0, 0] 4 messages in the buffer
 public struct RemoteBufferSize {
     public let count: UInt32
+    public var bytes: [UInt8] { return self.count.bytes }
     
     public init(bytes: [UInt8]) throws {
         if bytes.count != 4 { throw ValueError.incorrectNumberOfBytesError }
@@ -824,6 +825,10 @@ public struct RemoteBufferSize {
         + (UInt32(bytes[1]) << 8)
         + (UInt32(bytes[2]) << 16)
         + (UInt32(bytes[3]) << 24)
+    }
+    
+    public init(count: UInt32) {
+        self.count = count
     }
 }
 
