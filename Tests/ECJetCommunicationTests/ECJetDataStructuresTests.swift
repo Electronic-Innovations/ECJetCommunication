@@ -245,4 +245,5 @@ final class ECJetDataStructuresTests: XCTestCase {
         XCTAssertEqual(bufferSize.count, 4)
         XCTAssertEqual(bufferSize.bytes, [4,0,0,0])
     }
+    
 }
