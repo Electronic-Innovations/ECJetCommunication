@@ -60,7 +60,13 @@ final class ECJetDataStructuresTests: XCTestCase {
         let frame = Frame(bytes: [0x7E,0x00,0x07,0x00,0x0C,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x96,0x79,0x65,0x7F],
                                         verificationMethod: .crc16)!
         let printHeight = try! PrintHeight(bytes: frame.data)
-        XCTAssertEqual(printHeight.mm, 150.0, accuracy: 0.01)
+        XCTAssertEqual(printHeight.value, 150)
+    }
+    
+    func testPrintHeightTooLow() throws {
+        XCTAssertThrowsError(try PrintHeight(value: 100))
+        XCTAssertThrowsError(try PrintHeight(value: 250))
+        XCTAssertNoThrow(try PrintHeight(value: 190))
     }
     
     func testPrintCount() throws {

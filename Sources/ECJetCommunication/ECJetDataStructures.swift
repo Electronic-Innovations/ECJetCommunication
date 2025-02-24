@@ -11,6 +11,8 @@ enum ValueError: Error {
     case encodingValueError
     case setTriggerRepeatError
     case incorrectNumberOfBytesError
+    case printHeightTooLowError
+    case printHeightTooHighError
 }
 
 // https://oleb.net/blog/2018/03/making-illegal-states-unrepresentable/
@@ -121,20 +123,29 @@ public struct PrintInterval: CustomStringConvertible {
 }
 
 // MARK: Get Print Height 0x08
+// Hard to know what the PrintHeight parameter in the printers represents. It is a number between 110 and 230.
 public struct PrintHeight: CustomStringConvertible {
     private let data: UInt8
     public var bytes: [UInt8] { return [data] }
-    public var mm: Double { return Double(self.data) } // TODO: Probably a scaling factor
-    public var description: String { return "\(String(format: "%.2f", self.mm))mm" }
+    public var value: UInt8 { return self.data }
+    //public var mm: Double { return Double(self.data) } // TODO: Probably a scaling factor
+    //public var description: String { return "\(String(format: "%.2f", self.mm))mm" }
+    public var description: String { return "\(self.value))" }
     
     public init(bytes: [UInt8]) throws {
         if bytes.count != 1 { throw ValueError.incorrectNumberOfBytesError }
         self.data = bytes[0]
     }
     
-    public init(mm value: Double) throws {
-        self.data = UInt8(value) // TODO: Scaling and/or rounding likely required
+    public init(value: UInt8) throws {
+        if value > 230 { throw ValueError.printHeightTooHighError }
+        else if value < 110 { throw ValueError.printHeightTooLowError }
+        else { self.data = value }
     }
+    
+    //public init(mm value: Double) throws {
+    //    self.data = UInt8(value) // TODO: Scaling and/or rounding likely required
+    //}
 }
 
 // MARK: Get Print Count 0x0A
