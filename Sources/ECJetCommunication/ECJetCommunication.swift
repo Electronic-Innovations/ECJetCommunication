@@ -387,6 +387,18 @@ public struct Frame: CustomStringConvertible, Hashable {
     }
     
     // MARK: Get Print Height 0x08
+    static public func decodePrintHeight(data: [UInt8]) -> UInt8 {
+        precondition(data.count == 1)
+        return data[0]
+    }
+    
+    static public func encodePrintHeight(value: UInt8) throws -> [UInt8] {
+        if value > 230 { throw ValueError.printHeightTooHighError }
+        else if value < 110 { throw ValueError.printHeightTooHighError }
+        else {
+            return [value]
+        }
+    }
     
     // MARK: Get Print Count 0x0A
     public static func decodePrintCount(_ data: [UInt8]) -> Int {
