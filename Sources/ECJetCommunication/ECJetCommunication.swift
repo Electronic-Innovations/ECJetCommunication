@@ -72,6 +72,16 @@ public enum ReceptionStatus: UInt8 {
     case fromPC = 0x00
 }
 
+public enum CMDStatus: UInt16 {
+    case success = 0
+    case failed = 1
+    case notImplemented = 2
+    case jetNotRunning = 8
+    case parameterError = 4
+    case printerBusy = 10
+}
+// TODO: Use the CMDStatus enum for the status field of the CommandInformation struct
+
 public struct CommandInformation {
     public let acknowledge: ReceptionStatus
     public let nr: UInt16
