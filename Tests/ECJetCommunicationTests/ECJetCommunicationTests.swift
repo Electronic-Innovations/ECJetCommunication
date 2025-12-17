@@ -41,6 +41,11 @@ final class ECJetCommunicationTests: XCTestCase {
         XCTAssertEqual(result, 0xA4C3)
     }
     
+    func testMOD256() throws {
+        let data: [UInt8] = [0x00,0x07,0x00,0x0C,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x96]
+        let result = Frame.mod256(data)
+        XCTAssertEqual(result, 0xA9)
+    }
     
     func testFrame() throws {
         let f = Frame.createStartPrint()
@@ -53,6 +58,28 @@ final class ECJetCommunicationTests: XCTestCase {
         let frame = Frame(address: 0, command: .setPrintHeight, information: CommandInformation.fromPC(), data: [0x96], verification: .crc16)
         XCTAssertEqual(bytes, frame.bytes)
     }
+    
+    func testVerificationMistakeCRC() throws {
+        let bytes:[UInt8] = [0x7E,0x00,0x07,0x00,0x0C,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x96,0x79,0x65,0x7F]
+        XCTAssertNil(Frame(bytes: bytes, verificationMethod: .none))
+        XCTAssertNil(Frame(bytes: bytes, verificationMethod: .mod256))
+        XCTAssertNotNil(Frame(bytes: bytes, verificationMethod: .crc16))
+    }
+    
+    func testVerificationMistakeMOD256() throws {
+        let bytes:[UInt8] = [0x7E,0x00,0x07,0x00,0x0C,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x96,0xA9,0x7F]
+        XCTAssertNil(Frame(bytes: bytes, verificationMethod: .none))
+        XCTAssertNotNil(Frame(bytes: bytes, verificationMethod: .mod256))
+        XCTAssertNil(Frame(bytes: bytes, verificationMethod: .crc16))
+    }
+    
+    func testVerificationMistakeNONE() throws {
+        let bytes:[UInt8] = [0x7E,0x00,0x07,0x00,0x0C,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x96,0x7F]
+        XCTAssertNotNil(Frame(bytes: bytes, verificationMethod: .none))
+        XCTAssertNil(Frame(bytes: bytes, verificationMethod: .mod256))
+        XCTAssertNil(Frame(bytes: bytes, verificationMethod: .crc16))
+    }
+    
     func testSetPrintHeightResponsePacket() throws {
         let bytes:[UInt8] = [0x7E,0x00,0x07,0x00,0x0C,0x00,0x06,0x00,0x00,0x00,0x00,0x00,0x00,0xDA,0xD8,0x7F]
         let frame = Frame(bytes: bytes, verificationMethod: .crc16)!
@@ -219,7 +246,12 @@ final class ECJetCommunicationTests: XCTestCase {
     }
     
     func testByteCapture() throws {
-        let bytes:[UInt8] = [0x7E,0x00,0x20,0x00,0x0C,0x00,0x06,0x00,0x00,0x00,0x00,0x00,0x00,0x7D,0x5D,0x7D,0x5E,0x7D,0x5F,0x79,0xE0,0x7F]
+        // In the frame structure, 7Eh, 7Fh can only used in the [STX][ETX] bit, they must not appear in other positions.
+        // The specified escaping flag is 7Dh, except for [STX][ETX]:
+        // Single-byte data 7Eh is escaped to double-byte 7Dh, 5Eh.
+        // Single-byte data 7Dh is escaped to double-byte 7Dh, 5Dh.
+        // Single-byte data 7Fh is escaped to double-byte 7Dh, 5Fh.
+        let bytes:[UInt8] = [0x7E,0x00,0x02,0x00,0x0C,0x00,0x06,0x00,0x00,0x00,0x00,0x00,0x00,0x7D,0x5D,0x7D,0x5E,0x7D,0x5F,0x12,0xB8,0x7F]
         let frame = Frame(bytes: bytes, verificationMethod: .crc16)!
         XCTAssertEqual(frame.data, [0x7D,0x7E,0x7F])
     }

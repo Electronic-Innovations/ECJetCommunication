@@ -13,6 +13,11 @@ import Foundation
 //  - Extract information from it automatically
 //  - Bunch of static functions for creating frames of certain types
 
+public enum BufferSize {
+    case count(Int)
+    case variable
+}
+
 public enum Command: UInt16 {
     case setPrintWidth = 0x0001
     case getPrintWidth = 0x0002
@@ -64,6 +69,118 @@ public enum Command: UInt16 {
     case requestRemoteData = 0x1003
     case printFaultState = 0x1004
     
+    static var sendDataCount: [Command: BufferSize] =
+        [.setPrintWidth         : .count(3),
+         .getPrintWidth         : .count(0),
+        .setPrintDelay          : .count(5),
+        .getPrintDelay          : .count(0),
+        .setPrintInterval       : .count(5),
+        .getPrintInterval       : .count(0),
+        .setPrintHeight         : .count(1),
+        .getPrintHeight         : .count(0),
+        .setPrintCount          : .count(5),
+        .getPrintCount          : .count(1),
+        .setReverseMessage      : .count(2),
+        .getReverseMessage      : .count(0),
+        .setTriggerRepeat       : .count(1),
+        .getTriggerRepeat       : .count(0),
+        .getPrinterStatus       : .count(0),
+        .setPrintHeadCode       : .count(14),
+        .getPrintHeadCode       : .count(0),
+        .setPhotocellMode       : .count(1),
+        .getPhotocellMode       : .count(0),
+        .getJetStatus           : .count(0),
+        .getSystemTimes         : .count(0),
+        .startJet               : .count(0),
+        .stopJet                : .count(0),
+        .startPrint             : .count(0),
+        .stopPrint              : .count(0),
+        .triggerPrint           : .count(0),
+        .setDateTime            : .count(20),
+        .getDateTime            : .count(0),
+        .getFontList            : .count(0),
+        .getMessageList         : .count(0),
+        .createField            : .variable,
+        .downloadRemoteBuffer   : .variable,
+        .deleteLastField        : .count(0),
+        .deleteMessageContent   : .count(0),
+        .setCurrentMessage      : .count(32),
+        .setAUXMode             : .count(1),
+        .getAUXMode             : .count(0),
+        .setShaftEncoderMode    : .count(1),
+        .getShaftEncoderMode    : .count(0),
+        .setReferenceModulation : .count(1),
+        .getReferenceModulation : .count(0),
+        .resetSerialNumber      : .count(0),
+        .resetCountLength       : .count(0),
+        .getRemoteBufferSize    : .count(0),
+        .printTriggerState      : .count(0),
+        .printGoState           : .count(0),
+        .printEndState          : .count(0),
+        .requestRemoteData      : .count(0),
+        .printFaultState        : .count(0)]
+    
+    func expectedSendDataCount() -> BufferSize {
+        return Command.sendDataCount[self]!
+    }
+    
+    static var receiveDataCount: [Command: BufferSize] =
+        [.setPrintWidth         : .count(0),
+         .getPrintWidth         : .count(3),
+        .setPrintDelay          : .count(0),
+        .getPrintDelay          : .count(5),
+        .setPrintInterval       : .count(0),
+        .getPrintInterval       : .count(5),
+        .setPrintHeight         : .count(0),
+        .getPrintHeight         : .count(1),
+        .setPrintCount          : .count(0),
+        .getPrintCount          : .count(4),
+        .setReverseMessage      : .count(0),
+        .getReverseMessage      : .count(2),
+        .setTriggerRepeat       : .count(0),
+        .getTriggerRepeat       : .count(1),
+        .getPrinterStatus       : .count(5),
+        .setPrintHeadCode       : .count(0),
+        .getPrintHeadCode       : .count(14),
+        .setPhotocellMode       : .count(0),
+        .getPhotocellMode       : .count(1),
+        .getJetStatus           : .count(10),
+        .getSystemTimes         : .count(32),
+        .startJet               : .count(0),
+        .stopJet                : .count(0),
+        .startPrint             : .count(0),
+        .stopPrint              : .count(0),
+        .triggerPrint           : .count(0),
+        .setDateTime            : .count(0),
+        .getDateTime            : .count(20),
+        .getFontList            : .variable,
+        .getMessageList         : .variable,
+        .createField            : .count(0),
+        .downloadRemoteBuffer   : .count(1),
+        .deleteLastField        : .count(0),
+        .deleteMessageContent   : .count(0),
+        .setCurrentMessage      : .count(0),
+        .setAUXMode             : .count(0),
+        .getAUXMode             : .count(1),
+        .setShaftEncoderMode    : .count(0),
+        .getShaftEncoderMode    : .count(1),
+        .setReferenceModulation : .count(0),
+        .getReferenceModulation : .count(1),
+        .resetSerialNumber      : .count(0),
+        .resetCountLength       : .count(0),
+        .getRemoteBufferSize    : .count(4),
+        .printTriggerState      : .count(0),
+        .printGoState           : .count(0),
+        .printEndState          : .count(0),
+        .requestRemoteData      : .count(0),
+        .printFaultState        : .count(0)]
+    
+    func expectedReceiveDataCount() -> BufferSize {
+        return Command.receiveDataCount[self]!
+    }
+    func expectedDataCount(fromPC: Bool) -> BufferSize {
+        return fromPC ? Command.sendDataCount[self]! : Command.receiveDataCount[self]!
+    }
 }
 
 public enum ReceptionStatus: UInt8 {
@@ -112,6 +229,10 @@ public struct CommandInformation {
     
     public static func fromPC() -> CommandInformation {
         return CommandInformation(bytes: [0,0,0,0,0,0,0])!
+    }
+    
+    public var fromPC : Bool {
+        return bytes.reduce(true) { $0 && $1 == 0 }
     }
     
     public var bytes: [UInt8] {
@@ -221,6 +342,15 @@ public struct Frame: CustomStringConvertible, Hashable {
                 print("Received: \(crc), Calculated: \(crcCalculated) from: \(crcProvided)")
                 return nil
             }
+        case .mod256:
+            let modProvided = input.removeLast()
+            let mod = UInt8(modProvided)
+            let modCalculated = Frame.mod256(input)
+            if mod != modCalculated {
+                print("Mod was wrong: \(bytes)")
+                print("Received: \(mod), Calculated: \(modCalculated) from: \(modProvided)")
+                return nil
+            }
         default:
             break
         }
@@ -233,8 +363,7 @@ public struct Frame: CustomStringConvertible, Hashable {
         if let com = Command(rawValue: UInt16(upper: commandProvided[1], lower: commandProvided[0])) {
             self.command = com
         } else {
-            print("Couldn't recognise the command: \(commandProvided)")
-            print(bytes)
+            print("Couldn't recognise the command: \(commandProvided): \(bytes)")
             return nil
         }
         
@@ -256,6 +385,18 @@ public struct Frame: CustomStringConvertible, Hashable {
         }
         
         // data
+        let expectedDataCount = self.command.expectedDataCount(fromPC: self.information.fromPC)
+        switch expectedDataCount {
+        case .count(let expected):
+            if input.count != expected {
+                print("Incorrect data length for \(self.command) \(self.information.fromPC ? "from PC" : "from Printer"): \(input), expected \(expected) bytes")
+                return nil
+            }
+        case .variable:
+            // Can't really check anything here
+            break
+        }
+        
         self.data = input
         
         self.verification = verificationMethod
@@ -606,8 +747,17 @@ public struct Frame: CustomStringConvertible, Hashable {
     }
     
     // MARK: - Checksum Methods
-    public static func mod256(_ data: Data) -> UInt8 {
-        return 0xFF
+    // Using Mod256 as the check method, the checksum is calculated by summing all the bytes starting from
+    // [ADDR] to [<DATA>] in the communication frame, and modulo the 256, which is the check word.
+    // [<CHECKUSM>] is 1 byte in length.
+    public static func mod256(_ data: [UInt8]) -> UInt8 {
+        var mod: UInt8 = 0
+        
+        for byte in data {
+            mod = mod &+ byte
+        }
+        
+        return mod
     }
     
     // Using CRC16 as the check method, the input of CRC16 is all bytes in the communication frame starting from [ADDR] to [<DATA>], and the output is the check word.

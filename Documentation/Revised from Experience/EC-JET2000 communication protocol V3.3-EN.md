@@ -242,6 +242,68 @@ After receiving the response frame, the master can judge whether the instruction
 
 ## Detailed Instructions
 
+### Command Summary Table
+
+| CMD-ID | Description | Send Data | Return Data |
+|--------|-------------|-----------|-------------|
+| 0001H | Set print width | 3 bytes, print width value | empty |
+| 0002H | Get print width | empty | 3 bytes, print width value |
+| 0003H | Set print delay | 5 bytes, print delay value | empty |
+| 0004H | Get print delay | empty | 5 bytes, print delay value |
+| 0005H | Set the print interval | 5 bytes, print interval value | empty |
+| 0006H | Get the print interval | empty | 5 bytes, print delay value |
+| 0007H | Set the print height | 1 byte print height value (110 - 230) | empty |
+| 0008H | Get the print height | empty | 1 byte print delay value (110 - 230) |
+| 0009H | Set print count | 5 bytes: [CountType] 1 byte, [PrintCount] 4 bytes | empty |
+| 000AH | Get Print Count | 1 byte count type | 4 bytes print count value |
+| 000BH | Set reverse message printing mode | 2 bytes: [Vertical Revert] 1 byte, [Horizontal Revert] 1 byte | empty |
+| 000CH | Get reverse message printing mode | empty | 2 bytes: [Vertical Revert] 1 byte, [Horizontal Revert] 1 byte |
+| 000DH | Set trigger repeat | 1 byte Trigger repetition number (minimum 1) | empty |
+| 000EH | Get trigger repeat | empty | 1 byte Trigger repetition number (minimum 1) |
+| 000FH | Get printer status | empty | 5 bytes: [Working Status] 1 byte, [Warning Status] 4 bytes |
+| 0010H | Set print head code | 14 bytes print head code ASCII value | empty |
+| 0011H | Get print head code | empty | 14 bytes print head code ASCII value |
+| 0012H | Set Photocell mode | 1 byte (0=interior trigger, 1=photocell edge, 2=photocell level, 3=remote) | empty |
+| 0013H | Get Photocell mode | empty | 1 byte (0=interior trigger, 1=photocell edge, 2=photocell level, 3=remote) |
+| 0014H | Get jet status | empty | 10 bytes: [RefPress] 1 byte, [Press] 1 byte, [ReadPress] 1 byte, [SolventAddtion] 1 byte, [Modulation] 1 byte, [Phase] 1 byte, [RefVOD] 2 bytes, [VOD] 2 bytes |
+| 0015H | Get system times | empty | 32 bytes: [PowerOnHour] 4 bytes, [PowerOnMinute] 4 bytes, [JetRunningHour] 4 bytes, [JetRunningMinute] 4 bytes, [FilterChangeHour] 4 bytes, [FilterChangeMinute] 4 bytes, [ServiceHour] 4 bytes, [ServiceMinue] 4 bytes |
+| 0016H | Start jet | empty | empty |
+| 0017H | Stop jet | empty | empty |
+| 0018H | Start print | empty | empty |
+| 0019H | Stop print | empty | empty |
+| 001AH | Trigger print | empty | empty |
+| 001BH | Set date time | 20 bytes format "yyyy.MM.dd-hh:mm:ss" | empty |
+| 001CH | Get date time | empty | 20 bytes format "yyyy.MM.dd-hh:mm:ss" |
+| 001DH | Get font list | empty | [FontCount] 1 byte, [FontNameList] array (each 16 bytes) |
+| 001EH | Get message list | empty | [FileCount] 2 bytes, [FilleNameList] array (each 32 bytes) |
+| 001FH | Create field (Text) | FieldType=00h, PositionX (2 bytes), PositionY (2 bytes), BoldX (1 byte), BoldY (1 byte), Rotation (1 byte), MirrorX (1 byte), MirrorY (1 byte), Revert (1 byte), FontName (16 bytes), Interval (1 byte), StrLength (2 bytes), String (variable) | empty |
+| 001FH | Create field (Barcode) | FieldType=01h, PositionX (2 bytes), PositionY (2 bytes), BoldX (1 byte), BoldY (1 byte), Rotation (1 byte), MirrorX (1 byte), MirrorY (1 byte), Revert (1 byte), Symbology (1 byte), Option1 (1 byte), Option2 (1 byte), Option3 (1 byte), Reverse (1 byte), StrLength (2 bytes), String (variable) | empty |
+| 001FH | Create field (Logo) | FieldType=02h, PositionX (2 bytes), PositionY (2 bytes), BoldX (1 byte), BoldY (1 byte), Rotation (1 byte), MirrorX (1 byte), MirrorY (1 byte), Revert (1 byte), Width (2 bytes), Height (2 bytes), Length (2 bytes), Data (variable) | empty |
+| 001FH | Create field (Remote text) | FieldType=03h, PositionX (2 bytes), PositionY (2 bytes), BoldX (1 byte), BoldY (1 byte), Rotation (1 byte), MirrorX (1 byte), MirrorY (1 byte), Revert (1 byte), FontName (16 bytes), Interval (1 byte), CharCount (2 bytes) | empty |
+| 001FH | Create field (Remote barcode) | FieldType=04h, PositionX (2 bytes), PositionY (2 bytes), BoldX (1 byte), BoldY (1 byte), Rotation (1 byte), MirrorX (1 byte), MirrorY (1 byte), Revert (1 byte), Symbology (1 byte), Option1 (1 byte), Option2 (1 byte), Option3 (1 byte), Reverse (1 byte), CharCount (2 bytes) | empty |
+| 001FH | Create field (date time text) | FieldType=05h, PositionX (2 bytes), PositionY (2 bytes), BoldX (1 byte), BoldY (1 byte), Rotation (1 byte), MirrorX (1 byte), MirrorY (1 byte), Revert (1 byte), Format (20 bytes), OffsetYear (2 bytes), OffsetMonth (2 bytes), OffsetDay (2 bytes), OffsetHour (2 bytes), OffsetMin (2 bytes), FontName (16 bytes), Interval (1 byte), StrLength (2 bytes) | empty |
+| 001FH | Create field (date time barcode) | FieldType=06h, PositionX (2 bytes), PositionY (2 bytes), BoldX (1 byte), BoldY (1 byte), Rotation (1 byte), MirrorX (1 byte), MirrorY (1 byte), Revert (1 byte), Format (20 bytes), OffsetYear (2 bytes), OffsetMonth (2 bytes), OffsetDay (2 bytes), OffsetHour (2 bytes), OffsetMin (2 bytes), Symbology (1 byte), Option1 (1 byte), Option2 (1 byte), Option3 (1 byte), Reverse (1 byte), StrLength (2 bytes) | empty |
+| 001FH | Create field (serial number text) | FieldType=07h, PositionX (2 bytes), PositionY (2 bytes), BoldX (1 byte), BoldY (1 byte), Rotation (1 byte), MirrorX (1 byte), MirrorY (1 byte), Revert (1 byte), Begin (4 bytes), End (4 bytes), Step (4 bytes), Current (4 bytes), Repeats (4 bytes), RepeatCount (4 bytes), Hexadecimal (1 byte), Digits (1 byte), LeadingZero (1 byte), FontName (16 bytes), Interval (1 byte), StrLength (2 bytes) | empty |
+| 001FH | Create field (serial number Barcode) | FieldType=08h, PositionX (2 bytes), PositionY (2 bytes), BoldX (1 byte), BoldY (1 byte), Rotation (1 byte), MirrorX (1 byte), MirrorY (1 byte), Revert (1 byte), Begin (4 bytes), End (4 bytes), Step (4 bytes), Current (4 bytes), Repeats (4 bytes), RepeatCount (4 bytes), Hexadecimal (1 byte), Digits (1 byte), LeadingZero (1 byte), Symbology (1 byte), Option1 (1 byte), Option2 (1 byte), Option3 (1 byte), Reverse (1 byte), DataLength (2 bytes) | empty |
+| 0020H | Download Remote buffer | Variable, [Length] 2 bytes, [String] variable length, [isFull] 1 byte | 1 byte indicating if buffer is full |
+| 0021H | Delete last field | empty | empty |
+| 0022H | Delete message content | empty | empty |
+| 0023H | Set current message | [FileName] 32 bytes | empty |
+| 0024H | Set Aux mode | [Mode] 1 byte (0=off, 1=serial reset, 2=horizontal reversal, 3=vertical reversal, 4=both) | empty |
+| 0025H | Get Aux mode | empty | [Mode] 1 byte (0=off, 1=serial reset, 2=horizontal reversal, 3=vertical reversal, 4=both) |
+| 0026H | Set Shaft Encoder Mode | [Mode] 1 byte | empty |
+| 0027H | Get Shaft Encoder Mode | empty | [Mode] 1 byte |
+| 0028H | Set reference modulation | [Mode] 1 byte, reference modulation value | empty |
+| 0029H | Get reference modulation | empty | [Mode] 1 byte, reference modulation value |
+| 002AH | Reset serial number | empty | empty |
+| 002BH | Reset count length | empty | empty |
+| 002FH | Get Remote Buffer Size | empty | 4 bytes, Number of messages in the buffer |
+| 1000H | Print trigger state | empty | empty |
+| 1001H | Print go state | empty | empty |
+| 1002H | Print end state | empty | empty |
+| 1003H | Request remote data | empty | empty |
+| 1004H | Print fault | empty | empty |
+
 ### Set Print Width
 
 | Field | Value |
